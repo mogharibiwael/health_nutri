@@ -20,7 +20,7 @@ class CalculationsData {
     required int patientId,
     String? token,
   }) async {
-    return await crud.getData(ApiLinks.patientCalculations(patientId), token: token);
+    return await crud.getData(ApiLinks.doctorPatientCalculations(patientId), token: token);
   }
 
   /// POST /api/calculations/nutrition

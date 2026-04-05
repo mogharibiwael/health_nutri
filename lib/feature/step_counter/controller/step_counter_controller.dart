@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pedometer_plus/pedometer_plus.dart';
@@ -12,55 +12,67 @@ class StepCounterController extends GetxController {
   final RxString errorMessage = ''.obs;
 
   StreamSubscription<int>? _stepSubscription;
+  Timer? _webTimer;
   int _baselineSteps = 0;
 
   @override
   void onClose() {
     _stepSubscription?.cancel();
+    _webTimer?.cancel();
     super.onClose();
   }
 
   Future<void> startCounting() async {
     errorMessage.value = '';
 
-    if (GetPlatform.isAndroid) {
-      final status = await Permission.activityRecognition.request();
-      if (!status.isGranted) {
-        errorMessage.value = 'stepCounterPermissionDenied'.tr;
-        Get.snackbar(
-          "stepCounter".tr,
-          errorMessage.value,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange.shade100,
-        );
-        return;
+    if (!kIsWeb) {
+      if (GetPlatform.isAndroid) {
+        final status = await Permission.activityRecognition.request();
+        if (!status.isGranted) {
+          errorMessage.value = 'stepCounterPermissionDenied'.tr;
+          Get.snackbar(
+            "stepCounter".tr,
+            errorMessage.value,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange.shade100,
+          );
+          return;
+        }
       }
-    }
 
-    if (GetPlatform.isIOS) {
-      final status = await Permission.sensors.request();
-      if (!status.isGranted) {
-        errorMessage.value = 'stepCounterPermissionDenied'.tr;
-        Get.snackbar(
-          "stepCounter".tr,
-          errorMessage.value,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange.shade100,
-        );
-        return;
+      if (GetPlatform.isIOS) {
+        final status = await Permission.sensors.request();
+        if (!status.isGranted) {
+          errorMessage.value = 'stepCounterPermissionDenied'.tr;
+          Get.snackbar(
+            "stepCounter".tr,
+            errorMessage.value,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange.shade100,
+          );
+          return;
+        }
       }
     }
 
     try {
       _stepSubscription?.cancel();
+      _webTimer?.cancel();
       steps.value = 0;
       _baselineSteps = 0;
       isCounting.value = true;
 
-      _stepSubscription = Pedometer().stepCountStream().listen(
-        _onStepCount,
-        onError: _onStepError,
-      );
+      if (kIsWeb) {
+        // Web simulation for testing
+        _webTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+          steps.value += 2; // Simulate 2 steps per second
+        });
+      } else {
+        _stepSubscription = Pedometer().stepCountStream().listen(
+          _onStepCount,
+          onError: _onStepError,
+        );
+      }
     } catch (e) {
       errorMessage.value = e.toString();
       isCounting.value = false;
@@ -88,8 +100,11 @@ class StepCounterController extends GetxController {
   void stopCounting() {
     _stepSubscription?.cancel();
     _stepSubscription = null;
+    _webTimer?.cancel();
+    _webTimer = null;
     isCounting.value = false;
   }
 
   String get stepLabel => steps.value == 1 ? "step".tr : "steps".tr;
 }
+

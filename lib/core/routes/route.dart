@@ -45,6 +45,8 @@ import '../../feature/diet/view/diet_targets_page.dart';
 import '../../feature/diet/view/portion_categories_page.dart';
 import '../../feature/diet/view/diet_distribution_page.dart';
 import '../../feature/diet/view/determine_meals_page.dart';
+import '../../feature/diet/view/patient_diet_choice_page.dart';
+import '../../feature/diet/view/patient_diets_list_page.dart';
 import '../../feature/step_counter/view/step_counter_page.dart';
 import '../../feature/medical_files/view/medical_files_page.dart';
 import '../../feature/medical_tests/view/medical_tests_page.dart';
@@ -341,6 +343,18 @@ abstract class AppPages {
     GetPage(
       name: AppRoute.createDietForPatient,
       page: () => const CreateDietForPatientPage(),
+      binding: DietBinding(),
+      middlewares: [DoctorOnlyMiddleware()],
+    ),
+    GetPage(
+      name: AppRoute.patientDietChoice,
+      page: () => const PatientDietChoicePage(),
+      binding: DietBinding(),
+      middlewares: [DoctorOnlyMiddleware()],
+    ),
+    GetPage(
+      name: AppRoute.patientDietsList,
+      page: () => const PatientDietsListPage(),
       binding: DietBinding(),
       middlewares: [DoctorOnlyMiddleware()],
     ),

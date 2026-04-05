@@ -81,7 +81,7 @@ class EditProfilePage extends GetView<EditProfileController> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: c.save,
+                    onPressed: c.isLoading ? null : c.save,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColor.primary,
                       foregroundColor: Colors.white,
@@ -90,7 +90,9 @@ class EditProfilePage extends GetView<EditProfileController> {
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: Text("edit".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    child: c.isLoading
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : Text("edit".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],

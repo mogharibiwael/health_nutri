@@ -25,14 +25,13 @@ class HomePage extends GetView<HomeController> {
           appBar: CustomAppBar(
             title: "homeTitle".tr,
             showLogo: false,
-            leading: Builder(
-              builder: (ctx) => IconButton(
-                icon: const Icon(Icons.menu, color: AppColor.deepPurple, size: 26),
-                onPressed: () => Scaffold.of(ctx).openDrawer(),
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            actions: [
+              IconButton(
+                onPressed: () => controller.logout(),
+                icon: const Icon(Icons.logout, color: AppColor.deepPurple),
+                tooltip: "logout".tr,
               ),
-            ),
+            ],
           ),
           drawer: HomeDrawer(controller: controller),
           body: Row(
@@ -142,6 +141,12 @@ class HomePage extends GetView<HomeController> {
                           title: "spiritualNutrition".tr,
                           icon: Icons.self_improvement,
                           onTap: controller.goSpiritualNutrition,
+                        ),
+                        const SizedBox(height: 12),
+                        _HomeMenuButton(
+                          title: "logout".tr,
+                          icon: Icons.logout,
+                          onTap: controller.logout,
                         ),
                       ],
                     ),

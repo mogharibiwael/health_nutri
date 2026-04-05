@@ -103,7 +103,7 @@ class WelcomePage extends StatelessWidget {
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.w800,
-              color: AppColor.primary,
+              color: AppColor.accentGreen,
             ),
           ),
           const SizedBox(height: 14),
@@ -132,6 +132,7 @@ class WelcomePage extends StatelessWidget {
   Widget _buildButtons(BuildContext context) {
     return Row(
       children: [
+        const SizedBox(height: 150),
         _welcomeButton(
           label: "exit".tr,
           onTap: () {

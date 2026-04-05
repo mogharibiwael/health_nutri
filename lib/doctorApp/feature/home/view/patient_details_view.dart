@@ -428,7 +428,11 @@ class _MacrosSection extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: c.openCreateDiet,
                   icon: const Icon(Icons.restaurant_menu_outlined, size: 20),
-                  label: Text("createDietForPatient".tr),
+                  label: Text(
+                    Get.arguments is Map && Get.arguments['isEditDiet'] == true
+                        ? "editDietChoice".tr
+                        : "createDietForPatient".tr,
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColor.primary,
                     side: BorderSide(color: AppColor.primary),

@@ -475,6 +475,9 @@ const Map<String, String> arTranslation = {
   "finish": "إنهاء",
   "targetProtein": "البروتين المستهدف",
   "targetCarbs": "الكربوهيدرات المستهدفة",
-  "targetFat": "بروتين الدهون",
-  "dietErrorRate": "معدل خطأ الحمية",
+  "targetFat": "الدهون المستهدفة",
+  "viewDietChoice": "عرض الحميات السابقة",
+  "createDietChoice": "إنشاء حمية جديدة",
+  "editDietChoice": "تعديل الحمية",
+  "dietHistory": "سجل الحميات المخصصة",
 };

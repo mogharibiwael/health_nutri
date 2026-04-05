@@ -252,6 +252,19 @@ class ChatController extends GetxController {
           Get.snackbar("Error", _mapStatus(l));
         },
         (r) async {
+          // If a patient is sending a file, keep a copy in medical-files (الملفات المساعدة)
+          if (!isCurrentUserDoctor && fileToSend != null) {
+            try {
+              await chatData.uploadMedicalFile(
+                filePath: fileToSend,
+                fileName: fileNameToSend,
+                patientId: myUserId,
+                token: myServices.token,
+              );
+            } catch (e) {
+              debugPrint("Failed to copy file to medical files: $e");
+            }
+          }
           sendStatus = StatusRequest.success;
           update();
           await refreshHistory();

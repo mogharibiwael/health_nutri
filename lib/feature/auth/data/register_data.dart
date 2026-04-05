@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:nutri_guide/core/constant/api_link.dart';
 
 import '../../../core/class/crud.dart';
@@ -18,7 +19,9 @@ class SignupData {
     String? type,
     String? gender,
     String? degreeFilePath,
+    Uint8List? degreeFileBytes,
     String? cvFilePath,
+    Uint8List? cvFileBytes,
     double? consultationFee,
     String? bankAccount,
     String? specialization,
@@ -41,10 +44,16 @@ class SignupData {
 
     final files = <MultipartFileField>[];
     if (type == "doctor") {
-      if (degreeFilePath != null && degreeFilePath.isNotEmpty) {
+      // Degree file: prefer bytes (web), fallback to path (mobile)
+      if (degreeFileBytes != null && degreeFileBytes.isNotEmpty) {
+        files.add(MultipartFileField(fieldName: "degree", bytes: degreeFileBytes, fileName: "degree.pdf"));
+      } else if (degreeFilePath != null && degreeFilePath.isNotEmpty) {
         files.add(MultipartFileField(fieldName: "degree", filePath: degreeFilePath));
       }
-      if (cvFilePath != null && cvFilePath.isNotEmpty) {
+      // CV file: prefer bytes (web), fallback to path (mobile)
+      if (cvFileBytes != null && cvFileBytes.isNotEmpty) {
+        files.add(MultipartFileField(fieldName: "cv", bytes: cvFileBytes, fileName: "cv.pdf"));
+      } else if (cvFilePath != null && cvFilePath.isNotEmpty) {
         files.add(MultipartFileField(fieldName: "cv", filePath: cvFilePath));
       }
     }
@@ -66,3 +75,4 @@ class SignupData {
     return response.fold((l) => l, (r) => r);
   }
 }
+

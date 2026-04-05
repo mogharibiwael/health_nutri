@@ -40,21 +40,21 @@ class BmiPage extends GetView<BmiController> {
               // حقول الإدخال
               _InputField(
                 label: "heightCm".tr,
-                hint: "170",
+                hint: "",
                 controller: c.heightController,
                 icon: Icons.height,
               ),
               const SizedBox(height: 12),
               _InputField(
                 label: "weightKg".tr,
-                hint: "70",
+                hint: "",
                 controller: c.weightController,
                 icon: Icons.monitor_weight_outlined,
               ),
               const SizedBox(height: 12),
               _InputField(
                 label: "age".tr,
-                hint: "25",
+                hint: "",
                 controller: c.ageController,
                 icon: Icons.cake_outlined,
               ),

@@ -74,4 +74,7 @@
    static const String referencesNutritionManuals = "$baseUrl/references/nutrition-manuals"; // GET - for doctors
    static const String mealsApi = "$baseUrl/meals"; // POST - meal with serving, carbo, protin, fat
 
+   // user profile update
+   static String updateUser(int userId) => "$baseUrl/users/$userId";
+
  }

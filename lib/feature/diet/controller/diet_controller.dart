@@ -5,6 +5,7 @@ import '../../../core/class/status_request.dart';
 import '../../../core/function/handel_data.dart';
 import '../../../core/service/serviecs.dart';
 import '../../../core/permissions/permissions.dart';
+import '../../../core/constant/api_link.dart';
 import '../data/diet_data.dart';
 import '../model/diet_model.dart';
 
@@ -117,9 +118,6 @@ class DietController extends GetxController {
   }) async {
     createStatus = StatusRequest.loading;
     update();
-    print("patientId--1-1-1-1-1-1-1-1-1");
-    print(patientId);
-    print("patientId--1-1-1-1-1-1-1-1-1");
     final res = await dietData.createDietPlan(
       patientId: patientId,
       doctorId: doctorId,
@@ -162,24 +160,49 @@ class DietController extends GetxController {
     await loadMyDiet();
   }
 
-  /// GET /api/diets - Load all diets (for doctors)
-  Future<void> loadAllDiets({int page = 1}) async {
+  /// GET /api/diets & /api/diet-plans - Load all diets (for doctors)
+  /// If [patientId] is provided, filters results from the backend.
+  Future<void> loadAllDiets({int page = 1, int? patientId}) async {
     if (!isDoctor) return;
     doctorDietsStatus = StatusRequest.loading;
     update();
-    final res = await dietData.getAllDiets(token: token, page: page);
-    res.fold((l) {
-      doctorDietsStatus = l;
-      update();
+
+    final Map<String, dynamic> query = patientId != null ? {"patient_id": patientId} : {};
+
+    // 1. Fetch from classic diets
+    final res1 = await dietData.getAllDiets(token: token, page: page, query: query);
+    // 2. Fetch from diet-plans (wizard-created)
+    final res2 = await dietData.getDietPlans(token: token, query: query);
+
+    List<DietModel> unifiedDiets = [];
+
+    res1.fold((l) {
+      print("[DietController] res1 error: $l");
     }, (r) {
-      final list = (r["data"] as List?) ?? [];
-      allDiets = list
+      final List list = (r["data"] as List?) ?? [];
+      unifiedDiets.addAll(list
           .whereType<Map>()
-          .map((e) => DietModel.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-      doctorDietsStatus = StatusRequest.success;
-      update();
+          .map((e) => DietModel.fromJson(Map<String, dynamic>.from(e))));
     });
+
+    res2.fold((l) {
+      print("[DietController] res2 error: $l");
+    }, (r) {
+      final List list = (r["data"] as List?) ?? (r is List ? r as List : []);
+      unifiedDiets.addAll(list
+          .whereType<Map>()
+          .map((e) => DietModel.fromJson(Map<String, dynamic>.from(e))));
+    });
+
+    // Sort by id descending (latest first) or by created_at
+    unifiedDiets.sort((a, b) => b.id.compareTo(a.id));
+    
+    // Remove duplicates if any (by id)
+    final ids = <int>{};
+    allDiets = unifiedDiets.where((d) => ids.add(d.id)).toList();
+
+    doctorDietsStatus = StatusRequest.success;
+    update();
   }
 
   /// GET /api/diet-plans/{id} - Load full diet plan with meals
@@ -204,9 +227,11 @@ class DietController extends GetxController {
     });
   }
 
-  /// DELETE /api/diets/{id} - Delete diet
-  Future<bool> deleteDiet(int dietId) async {
-    final res = await dietData.deleteDiet(dietId: dietId, token: token);
+  /// DELETE /api/diets/{id} or /api/diet-plans/{id}
+  Future<bool> deleteDiet(int dietId, {bool isPlan = false}) async {
+    final res = isPlan
+        ? await dietData.crud.deleteData(ApiLinks.dietPlan(dietId), token: token)
+        : await dietData.deleteDiet(dietId: dietId, token: token);
     return res.fold((_) => false, (r) {
       Get.snackbar("success".tr, r["message"]?.toString() ?? "saved".tr);
       return true;

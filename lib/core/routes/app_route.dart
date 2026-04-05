@@ -20,6 +20,8 @@ class AppRoute {
   static const doctorDiets = "/doctor-diets";
   static const dietMeals = "/diet-meals";
   static const createDietForPatient = "/create-diet-for-patient";
+  static const patientDietChoice = "/patient-diet-choice";
+  static const patientDietsList = "/patient-diets-list";
   static const dietPeriods = "/diet-periods";
   static const dietTargets = "/diet-targets";
   static const dietPortionCategories = "/diet-portion-categories";

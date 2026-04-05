@@ -84,20 +84,19 @@ class StepCounterPage extends GetView<StepCounterController> {
                   height: 56,
                   child: ElevatedButton(
                     onPressed: isCounting
-                        ? null
+                        ? () => controller.stopCounting()
                         : () => controller.startCounting(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.primary,
+                      backgroundColor: isCounting ? Colors.red.shade400 : AppColor.primary,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: AppColor.primary.withOpacity(0.6),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 4,
-                      shadowColor: AppColor.primary.withOpacity(0.4),
+                      shadowColor: (isCounting ? Colors.red : AppColor.primary).withOpacity(0.4),
                     ),
                     child: Text(
-                      isCounting ? "stepCounter".tr : "startCounting".tr,
+                      isCounting ? "إيقاف العداد" : "startCounting".tr,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -114,3 +113,4 @@ class StepCounterPage extends GetView<StepCounterController> {
     );
   }
 }
+

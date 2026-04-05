@@ -6,6 +6,7 @@ import 'package:nutri_guide/core/class/status_request.dart';
 import 'package:nutri_guide/core/function/handel_data.dart';
 import 'package:nutri_guide/core/function/show_dialog.dart';
 import 'package:nutri_guide/core/routes/app_route.dart';
+import 'dart:typed_data';
 import '../../../core/helper/extract_massege.dart';
 import '../data/register_data.dart';
 
@@ -31,8 +32,10 @@ class SignupController extends GetxController {
 
   String? degreeFilePath;
   String? degreeFileName;
+  Uint8List? degreeFileBytes;
   String? cvFilePath;
   String? cvFileName;
+  Uint8List? cvFileBytes;
 
   /// Pick degree: PDF, DOC, DOCX, or images
   Future<void> pickDegreeFile() async {
@@ -41,10 +44,12 @@ class SignupController extends GetxController {
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
         allowMultiple: false,
+        withData: true,
       );
-      if (result != null && result.files.single.path != null) {
+      if (result != null && result.files.single.name.isNotEmpty) {
         degreeFilePath = result.files.single.path;
         degreeFileName = result.files.single.name;
+        degreeFileBytes = result.files.single.bytes;
         update();
       }
     } catch (e) {
@@ -63,10 +68,12 @@ class SignupController extends GetxController {
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx'],
         allowMultiple: false,
+        withData: true,
       );
-      if (result != null && result.files.single.path != null) {
+      if (result != null && result.files.single.name.isNotEmpty) {
         cvFilePath = result.files.single.path;
         cvFileName = result.files.single.name;
+        cvFileBytes = result.files.single.bytes;
         update();
       }
     } catch (e) {
@@ -81,12 +88,14 @@ class SignupController extends GetxController {
   void clearDegreeFile() {
     degreeFilePath = null;
     degreeFileName = null;
+    degreeFileBytes = null;
     update();
   }
 
   void clearCvFile() {
     cvFilePath = null;
     cvFileName = null;
+    cvFileBytes = null;
     update();
   }
 
@@ -153,7 +162,8 @@ class SignupController extends GetxController {
       }
 
       if (selectedType == "doctor") {
-        if (cvFilePath == null || cvFilePath!.isEmpty) {
+        final hasCv = (cvFilePath != null && cvFilePath!.isNotEmpty) || (cvFileBytes != null && cvFileBytes!.isNotEmpty);
+        if (!hasCv) {
           showAwesomeDialog(
             type: DialogType.warning,
             title: "Validation",
@@ -174,7 +184,9 @@ class SignupController extends GetxController {
         type: selectedType,
         gender: selectedGender,
         degreeFilePath: selectedType == "doctor" ? degreeFilePath : null,
+        degreeFileBytes: selectedType == "doctor" ? degreeFileBytes : null,
         cvFilePath: selectedType == "doctor" ? cvFilePath : null,
+        cvFileBytes: selectedType == "doctor" ? cvFileBytes : null,
         consultationFee: consultationFee,
         bankAccount: selectedType == "doctor" ? bankAccountController.text.trim() : null,
       );

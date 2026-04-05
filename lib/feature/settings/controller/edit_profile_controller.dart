@@ -1,11 +1,14 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/class/crud.dart';
+import '../../../core/constant/api_link.dart';
 import '../../../core/function/show_dialog.dart';
 import '../../../core/service/serviecs.dart';
 
 class EditProfileController extends GetxController {
   final MyServices myServices = Get.find();
+  final Crud crud = Get.find();
 
   late TextEditingController nameController;
   late TextEditingController emailController;
@@ -14,6 +17,7 @@ class EditProfileController extends GetxController {
 
   bool isPasswordHidden = true;
   bool isConfirmPasswordHidden = true;
+  bool isLoading = false;
 
   @override
   void onInit() {
@@ -74,13 +78,64 @@ class EditProfileController extends GetxController {
       return;
     }
 
-    // TODO: Call update profile API when available
-    showAwesomeDialog(
-      type: DialogType.success,
-      title: "success".tr,
-      desc: "Profile updated (API pending)",
-      onOk: () => Get.back(),
+    // Get user ID
+    final userId = myServices.user?["id"];
+    if (userId == null) {
+      showAwesomeDialog(
+        type: DialogType.error,
+        title: "error".tr,
+        desc: "sessionExpired".tr,
+      );
+      return;
+    }
+
+    isLoading = true;
+    update();
+
+    final body = <String, dynamic>{
+      "name": name,
+      "email": email,
+    };
+    if (pass.isNotEmpty) {
+      body["password"] = pass;
+    }
+
+    final token = myServices.token;
+    final res = await crud.putData(
+      ApiLinks.updateUser(userId is int ? userId : int.parse(userId.toString())),
+      body,
+      token: token,
     );
+
+    isLoading = false;
+    update();
+
+    res.fold((l) {
+      showAwesomeDialog(
+        type: DialogType.error,
+        title: "error".tr,
+        desc: "serverError".tr,
+      );
+    }, (r) async {
+      // Update local session with new data
+      final updatedUser = <String, dynamic>{
+        ...?myServices.user,
+        "name": name,
+        "email": email,
+      };
+      await myServices.saveSession(
+        token: token ?? "",
+        type: myServices.type ?? "user",
+        user: updatedUser,
+      );
+
+      showAwesomeDialog(
+        type: DialogType.success,
+        title: "success".tr,
+        desc: "profileSaved".tr,
+        onOk: () => Get.back(),
+      );
+    });
   }
 
   @override
@@ -92,3 +147,4 @@ class EditProfileController extends GetxController {
     super.onClose();
   }
 }
+

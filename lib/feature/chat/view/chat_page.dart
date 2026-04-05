@@ -46,15 +46,36 @@ class ChatPage extends GetView<ChatController> {
                   attachedFileName: c.attachedFileName,
                   onRemoveAttachment: c.clearAttachment,
                   // Only patients can upload files/medical tests in chat.
-                  onAttach: c.isCurrentUserDoctor
-                      ? null
-                      : () {
-                          MedicalTestDialog.show(
-                            context: context,
-                            doctorId: c.doctorId,
-                            onSend: c.uploadMedicalTest,
-                          );
-                        },
+                  onAttach: () {
+                    Get.bottomSheet(
+                      SafeArea(
+                        child: Container(
+                          color: Colors.white,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.photo_library_outlined),
+                                title: const Text("Photo"),
+                                onTap: () {
+                                  Get.back();
+                                  c.pickImage();
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.attach_file),
+                                title: const Text("File"),
+                                onTap: () {
+                                  Get.back();
+                                  c.pickFile();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                   onSend: c.send,
                 ),
               ],

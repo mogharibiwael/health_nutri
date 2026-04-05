@@ -11,8 +11,18 @@ class DietData {
   Future<Either<StatusRequest, Map<String, dynamic>>> getAllDiets({
     String? token,
     int page = 1,
+    Map<String, dynamic>? query,
   }) async {
-    return await crud.getData(ApiLinks.diets, token: token, query: {"page": page});
+    final Map<String, dynamic> q = {"page": page, ...?query};
+    return await crud.getData(ApiLinks.diets, token: token, query: q);
+  }
+
+  /// GET /api/diet-plans - Get all diet plans
+  Future<Either<StatusRequest, Map<String, dynamic>>> getDietPlans({
+    String? token,
+    Map<String, dynamic>? query,
+  }) async {
+    return await crud.getData(ApiLinks.dietPlans, token: token, query: query);
   }
 
   /// POST /api/diets - Create new diet
@@ -133,8 +143,6 @@ class DietData {
       if (mealPeriods != null && mealPeriods.isNotEmpty) "meal_periods": mealPeriods,
       if (doctorNotes != null && doctorNotes.isNotEmpty) "doctor_notes": doctorNotes,
     };
-    // Debug: verify payload before sending (remove after fixing patient_id)
-    print("[DietData] POST diet-plans body: patient_id=$patientId, doctor_id=$doctorId");
     return await createDiet(body: body, token: token);
   }
 }

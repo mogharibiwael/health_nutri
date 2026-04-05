@@ -172,6 +172,13 @@ class DoctorPatientsPage extends GetView<DoctorPatientsController> {
                     "patient_id": patient.effectivePatientId,
                     "doctor_id": doctorId,
                   });
+                } else if (_openedForDiets) {
+                  Get.toNamed(AppRoute.patientDietChoice, arguments: {
+                    "patient": patient,
+                    "patient_name": patient.fullname,
+                    "patient_id": patient.effectivePatientId,
+                    "doctor_id": doctorId,
+                  });
                 } else {
                   Get.toNamed(AppRoute.patientDetails, arguments: patient);
                 }

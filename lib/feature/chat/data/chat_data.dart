@@ -99,6 +99,32 @@ class ChatData {
     );
   }
 
+  /// POST /api/medical-files - Upload auxiliary file (الملفات المساعدة) from patient chat
+  Future<dynamic> uploadMedicalFile({
+    required String filePath,
+    String? fileName,
+    required int patientId,
+    String? token,
+  }) async {
+    final fields = <String, String>{
+      "patient_id": patientId.toString(),
+      "description": "Shared via chat",
+    };
+    final files = [
+      MultipartFileField(
+        fieldName: "file",
+        filePath: filePath,
+        fileName: fileName,
+      ),
+    ];
+    return crud.postMultipart(
+      ApiLinks.medicalFiles,
+      fields: fields,
+      files: files,
+      token: token,
+    );
+  }
+
   Future<dynamic> markAsRead({
     required int messageId,
     String? token,

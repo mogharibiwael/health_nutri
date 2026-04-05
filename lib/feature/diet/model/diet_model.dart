@@ -12,6 +12,7 @@ class DietModel {
   final String? notes;
   final List<DietMealModel> meals;
   final String? createdAt;
+  final bool isDietPlan;
 
   DietModel({
     required this.id,
@@ -27,6 +28,7 @@ class DietModel {
     this.notes,
     this.meals = const [],
     this.createdAt,
+    this.isDietPlan = false,
   });
 
   factory DietModel.fromJson(Map<String, dynamic> json) {
@@ -85,6 +87,7 @@ class DietModel {
       notes: json["notes"]?.toString() ?? json["description"]?.toString(),
       meals: mealsList,
       createdAt: json["created_at"]?.toString(),
+      isDietPlan: json.containsKey("daily_calories") || json.containsKey("duration_days") || json.containsKey("meals"),
     );
   }
 }

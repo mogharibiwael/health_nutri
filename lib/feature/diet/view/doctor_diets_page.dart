@@ -382,51 +382,48 @@ class _DietCard extends StatelessWidget {
                   ),
                 ],
               ),
-              if (diet.patientName != null) ...[
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(Icons.person_outline, size: 18, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      diet.patientName!,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade700,
-                      ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "tapToViewDiet".tr,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColor.primary,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
-                ),
-              ],
-              if (diet.doctorName != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  diet.doctorName!,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
                   ),
-                ),
-              ],
-              const SizedBox(height: 10),
-              _InfoRow("dailyCalories".tr, "${diet.dailyCalories} kcal"),
-              _InfoRow("durationDays".tr, "${diet.durationDays} days"),
-              _InfoRow("startDate".tr, diet.startDate),
-              _InfoRow("endDate".tr, diet.endDate),
-              const SizedBox(height: 8),
-              Text(
-                "tapToViewDiet".tr,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColor.primary,
-                  fontWeight: FontWeight.w500,
-                ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    onPressed: () => _confirmDelete(context, Get.find<DietController>(), diet),
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, DietController c, DietModel diet) {
+    Get.defaultDialog(
+      title: "deleteDiet".tr,
+      middleText: "confirmDeleteDiet".tr,
+      textConfirm: "delete".tr,
+      textCancel: "cancel".tr,
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.red,
+      onConfirm: () async {
+        Get.back();
+        final success = await c.deleteDiet(diet.id, isPlan: diet.isDietPlan);
+        if (success) {
+          c.loadAllDiets();
+        }
+      },
     );
   }
 }

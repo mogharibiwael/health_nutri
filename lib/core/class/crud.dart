@@ -15,11 +15,13 @@ class MultipartFileField {
   final String fieldName;
   final String filePath;
   final String? fileName;
+  final Uint8List? bytes;
 
   MultipartFileField({
     required this.fieldName,
-    required this.filePath,
+    this.filePath = '',
     this.fileName,
+    this.bytes,
   });
 }
 
@@ -104,14 +106,25 @@ class Crud {
 
       if (files != null) {
         for (final f in files) {
-          final file = File(f.filePath);
-          if (await file.exists()) {
-            final fileName = f.fileName ?? file.path.split(RegExp(r'[/\\]')).last;
-            request.files.add(await http.MultipartFile.fromPath(
+          if (f.bytes != null && f.bytes!.isNotEmpty) {
+            // Web: use in-memory bytes
+            final fileName = f.fileName ?? 'upload';
+            request.files.add(http.MultipartFile.fromBytes(
               f.fieldName,
-              f.filePath,
+              f.bytes!,
               filename: fileName,
             ));
+          } else if (f.filePath.isNotEmpty) {
+            // Mobile/Desktop: use file path
+            final file = File(f.filePath);
+            if (await file.exists()) {
+              final fileName = f.fileName ?? file.path.split(RegExp(r'[/\\]')).last;
+              request.files.add(await http.MultipartFile.fromPath(
+                f.fieldName,
+                f.filePath,
+                filename: fileName,
+              ));
+            }
           }
         }
       }
