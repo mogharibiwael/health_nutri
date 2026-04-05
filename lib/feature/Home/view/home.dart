@@ -7,6 +7,7 @@ import 'package:nutri_guide/core/constant/asset.dart';
 import 'package:nutri_guide/core/shared/widgets/app_bar.dart';
 import 'package:nutri_guide/core/shared/widgets/drawer.dart';
 import 'package:nutri_guide/feature/ads/model/ad_model.dart';
+import 'package:nutri_guide/core/routes/app_route.dart';
 
 import '../../home/controller/home_controller.dart';
 
@@ -102,6 +103,16 @@ class HomePage extends GetView<HomeController> {
                                 ),
                               ],
                             ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+
+                        // Diets / Virtual Clinic: for approved patients
+                        if (!controller.isDoctor && controller.isSubscribedApproved) ...[
+                          _HomeMenuButton(
+                            title: "diets".tr,
+                            icon: Icons.local_hospital_outlined,
+                            onTap: () => Get.toNamed(AppRoute.patientDietWelcome),
                           ),
                           const SizedBox(height: 12),
                         ],

@@ -16,8 +16,6 @@ class HomeDrawer extends StatefulWidget {
 }
 
 class _HomeDrawerState extends State<HomeDrawer> {
-  bool _showDietsSubMenu = false;
-
   static const Color _drawerBg = AppColor.primary;
 
   @override
@@ -36,6 +34,15 @@ class _HomeDrawerState extends State<HomeDrawer> {
     final bool openedForDiets = args is Map && args['openedForDiets'] == true;
     final bool openedForChat = args is Map && args['openedForChat'] == true;
     final bool openedForCalculations = args is Map && args['openedForCalculations'] == true;
+
+    final bool inVirtualClinic = !isDoctor && [
+      AppRoute.patientDietWelcome,
+      AppRoute.chat,
+      AppRoute.diet,
+      AppRoute.calculationsHistory,
+      "/bmi",
+      "/doctor-details",
+    ].contains(currentRoute);
 
     return Drawer(
       child: Container(
@@ -91,18 +98,8 @@ class _HomeDrawerState extends State<HomeDrawer> {
 
                     const SizedBox(height: 24),
 
-                    if (_showDietsSubMenu) ...[
-                      // ─── Diets Sub-Menu ───
-                      _DrawerItem(
-                        icon: Icons.arrow_back,
-                        label: "back".tr,
-                        onTap: () {
-                          setState(() {
-                            _showDietsSubMenu = false;
-                          });
-                        },
-                      ),
-                      const Divider(color: Colors.white24),
+                    if (inVirtualClinic) ...[
+                      // ─── Virtual Clinic Menu (Patient) ───
                       Builder(
                         builder: (ctx) {
                           final u = myServices.user;
@@ -132,10 +129,95 @@ class _HomeDrawerState extends State<HomeDrawer> {
                         },
                       ),
                       _DrawerItem(
+                        icon: Icons.group_outlined,
+                        label: "specialistDoctorInfo".tr,
+                        isSelected: currentRoute == "/doctor-details",
+                        onTap: () {
+                          final u = myServices.user;
+                          final p = (u?["patient_profile"] ?? u?["patientProfile"]) as dynamic;
+                          final currentDoctorId = (p is Map)
+                              ? (p["current_doctor_id"] is int
+                                  ? p["current_doctor_id"] as int
+                                  : int.tryParse("${p["current_doctor_id"]}") ?? 0)
+                              : 0;
+                          final activeSub = (p is Map) ? p["active_subscription"] : null;
+                          final doc = (activeSub is Map) ? activeSub["doctor"] : null;
+                          final doctorName = (p is Map ? p["doctor_name"] : null)?.toString() ??
+                              (doc is Map ? doc["name"] : null)?.toString() ??
+                              "Doctor";
+                          if (currentDoctorId > 0) {
+                            _navigate(context, "/doctor-details", arguments: {
+                              "id": currentDoctorId,
+                              "name": doctorName,
+                              "is_verified": true,
+                              "is_available": true,
+                              "rating": (doc is Map ? doc["rating"] : null) ?? "0.00",
+                              "consultation_fee": (doc is Map ? doc["consultation_fee"] : null),
+                              "user_id": (doc is Map ? doc["user_id"] : null),
+                              "gender": (doc is Map ? doc["gender"] : null),
+                            });
+                          } else {
+                            _navigate(context, "/doctors");
+                          }
+                        },
+                      ),
+                      _DrawerItem(
+                        icon: Icons.chat_bubble_outline,
+                        label: "chat".tr,
+                        isSelected: currentRoute == AppRoute.chat,
+                        onTap: () {
+                          final u = myServices.user;
+                          final p = (u?["patient_profile"] ?? u?["patientProfile"]) as dynamic;
+                          final currentDoctorId = (p is Map)
+                              ? (p["current_doctor_id"] is int
+                                  ? p["current_doctor_id"] as int
+                                  : int.tryParse("${p["current_doctor_id"]}") ?? 0)
+                              : 0;
+                          final activeSub = (p is Map) ? p["active_subscription"] : null;
+                          final doc = (activeSub is Map) ? activeSub["doctor"] : null;
+                          final doctorUserId = (doc is Map)
+                              ? (doc["user_id"] is int
+                                  ? doc["user_id"] as int
+                                  : int.tryParse("${doc["user_id"]}") ?? 0)
+                              : 0;
+                          final doctorName = (p is Map ? p["doctor_name"] : null)?.toString() ??
+                              (doc is Map ? doc["name"] : null)?.toString() ??
+                              "Doctor";
+                          if (currentDoctorId > 0) {
+                            _navigate(context, AppRoute.chat, arguments: {
+                              "doctor_id": currentDoctorId,
+                              "receiver_id": doctorUserId > 0 ? doctorUserId : currentDoctorId,
+                              "doctor_name": doctorName,
+                              "conversation_id": currentDoctorId,
+                            });
+                          } else {
+                            _navigate(context, "/doctors");
+                          }
+                        },
+                      ),
+                      _DrawerItem(
                         icon: Icons.restaurant_menu_outlined,
                         label: "myDiet".tr,
                         isSelected: currentRoute == AppRoute.diet,
                         onTap: () => _navigate(context, AppRoute.diet),
+                      ),
+                      _DrawerItem(
+                        icon: Icons.calculate_outlined,
+                        label: "bodyCalculations".tr,
+                        isSelected: currentRoute == "/bmi",
+                        onTap: () => _navigate(context, "/bmi"),
+                      ),
+                      _DrawerItem(
+                        icon: Icons.bar_chart_rounded,
+                        label: "showBodyCalculations".tr,
+                        isSelected: currentRoute == AppRoute.calculationsHistory,
+                        onTap: () => _navigate(context, AppRoute.calculationsHistory),
+                      ),
+                      _DrawerItem(
+                        icon: Icons.home_outlined,
+                        label: "mainMenu".tr,
+                        isSelected: currentRoute == AppRoute.home,
+                        onTap: () => _navigateToHome(context, isDoctor),
                       ),
                     ] else ...[
                       // ─── Main Menu ───
@@ -184,100 +266,6 @@ class _HomeDrawerState extends State<HomeDrawer> {
                           icon: Icons.help_outline,
                           label: "helpFiles".tr,
                           onTap: () => _navigate(context, AppRoute.medicalFiles),
-                        ),
-                      ],
-                      if (!isDoctor && isInsidePatientDiet) ...[
-                        if (isPatientSubscribed)
-                          _DrawerItem(
-                            icon: Icons.group_outlined,
-                            label: "specialistDoctorInfo".tr,
-                            onTap: () {
-                              final u = myServices.user;
-                              final p = (u?["patient_profile"] ?? u?["patientProfile"]) as dynamic;
-                              final currentDoctorId = (p is Map)
-                                  ? (p["current_doctor_id"] is int
-                                      ? p["current_doctor_id"] as int
-                                      : int.tryParse("${p["current_doctor_id"]}") ?? 0)
-                                  : 0;
-                              final activeSub = (p is Map) ? p["active_subscription"] : null;
-                              final doc = (activeSub is Map) ? activeSub["doctor"] : null;
-                              final doctorName = (p is Map ? p["doctor_name"] : null)?.toString() ??
-                                  (doc is Map ? doc["name"] : null)?.toString() ??
-                                  "Doctor";
-                              if (currentDoctorId > 0) {
-                                _navigate(context, "/doctor-details", arguments: {
-                                  "id": currentDoctorId,
-                                  "name": doctorName,
-                                  "is_verified": true,
-                                  "is_available": true,
-                                  "rating": (doc is Map ? doc["rating"] : null) ?? "0.00",
-                                  "consultation_fee": (doc is Map ? doc["consultation_fee"] : null),
-                                  "user_id": (doc is Map ? doc["user_id"] : null),
-                                  "gender": (doc is Map ? doc["gender"] : null),
-                                });
-                              } else {
-                                _navigate(context, "/doctors");
-                              }
-                            },
-                          ),
-                        if (isPatientApproved)
-                          _DrawerItem(
-                            icon: Icons.restaurant_menu_outlined,
-                            label: "diets".tr,
-                            onTap: () {
-                              setState(() {
-                                _showDietsSubMenu = true;
-                              });
-                            },
-                          ),
-                        if (isPatientApproved)
-                          _DrawerItem(
-                            icon: Icons.chat_bubble_outline,
-                            label: "chat".tr,
-                            isSelected: currentRoute == AppRoute.chat,
-                            onTap: () {
-                              final u = myServices.user;
-                              final p = (u?["patient_profile"] ?? u?["patientProfile"]) as dynamic;
-                              final currentDoctorId = (p is Map)
-                                  ? (p["current_doctor_id"] is int
-                                      ? p["current_doctor_id"] as int
-                                      : int.tryParse("${p["current_doctor_id"]}") ?? 0)
-                                  : 0;
-                              final activeSub = (p is Map) ? p["active_subscription"] : null;
-                              final doc = (activeSub is Map) ? activeSub["doctor"] : null;
-                              final doctorUserId = (doc is Map)
-                                  ? (doc["user_id"] is int
-                                      ? doc["user_id"] as int
-                                      : int.tryParse("${doc["user_id"]}") ?? 0)
-                                  : 0;
-                              final doctorName = (p is Map ? p["doctor_name"] : null)?.toString() ??
-                                  (doc is Map ? doc["name"] : null)?.toString() ??
-                                  "Doctor";
-                              if (currentDoctorId > 0) {
-                                _navigate(context, AppRoute.chat, arguments: {
-                                  "doctor_id": currentDoctorId,
-                                  "receiver_id": doctorUserId > 0 ? doctorUserId : currentDoctorId,
-                                  "doctor_name": doctorName,
-                                  "conversation_id": currentDoctorId,
-                                });
-                              } else {
-                                _navigate(context, "/doctors");
-                              }
-                            },
-                          ),
-                      ],
-                      if (!isDoctor) ...[
-                        _DrawerItem(
-                          icon: Icons.bar_chart_rounded,
-                          label: "showBodyCalculations".tr,
-                          isSelected: currentRoute == AppRoute.calculationsHistory,
-                          onTap: () => _navigate(context, AppRoute.calculationsHistory),
-                        ),
-                        _DrawerItem(
-                          icon: Icons.calculate_outlined,
-                          label: "bodyCalculations".tr,
-                          isSelected: currentRoute == "/bmi",
-                          onTap: () => _navigate(context, "/bmi"),
                         ),
                       ],
                       _DrawerItem(
