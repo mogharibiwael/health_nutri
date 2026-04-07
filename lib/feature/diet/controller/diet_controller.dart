@@ -197,9 +197,9 @@ class DietController extends GetxController {
     // Sort by id descending (latest first) or by created_at
     unifiedDiets.sort((a, b) => b.id.compareTo(a.id));
     
-    // Remove duplicates if any (by id)
-    final ids = <int>{};
-    allDiets = unifiedDiets.where((d) => ids.add(d.id)).toList();
+    // Remove duplicates if any (using composite key of id + isDietPlan to avoid collisions across tables)
+    final seen = <String>{};
+    allDiets = unifiedDiets.where((d) => seen.add("${d.isDietPlan}_${d.id}")).toList();
 
     doctorDietsStatus = StatusRequest.success;
     update();

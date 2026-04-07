@@ -90,7 +90,15 @@ class PatientProfileController extends GetxController {
     final w = double.tryParse(weightController.text.trim());
 
     if (dob.isEmpty || h == null || w == null || h <= 0 || w <= 0) {
-      Get.snackbar("Error", "Please fill required fields correctly");
+      Get.snackbar("error".tr, "fillFields".tr);
+      return;
+    }
+    if (w >= 200) {
+      Get.snackbar("error".tr, "invalidWeight".tr);
+      return;
+    }
+    if (h > 250 || h < 50) {
+      Get.snackbar("error".tr, "invalidHeight".tr);
       return;
     }
 

@@ -20,8 +20,8 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
-  /// Use v3 to force channel recreation with sound (Android channel settings are immutable)
-  static const String _channelId = 'reminders_channel_v3';
+  /// Use v5 to force channel recreation with sound (Android channel settings are immutable)
+  static const String _channelId = 'reminders_channel_v5';
   static const String _channelName = 'Reminders';
 
   /// Custom sound for notifications (Android: res/raw/notification_sound.wav)
@@ -64,6 +64,7 @@ class NotificationService {
       playSound: true,
       enableVibration: true,
       sound: _sound,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
     );
     await _plugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -129,11 +130,13 @@ class NotificationService {
       playSound: true,
       sound: _sound,
       enableVibration: true,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      sound: 'notification_sound.wav',
     );
     const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
@@ -171,11 +174,13 @@ class NotificationService {
       playSound: true,
       sound: _sound,
       enableVibration: true,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      sound: 'notification_sound.wav',
     );
     const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
     

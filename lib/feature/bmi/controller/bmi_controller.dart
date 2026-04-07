@@ -77,6 +77,18 @@ class BmiController extends GetxController {
       );
       return;
     }
+    if (age >= 100) {
+      Get.snackbar("error".tr, "invalidAge".tr, snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (weight >= 200) {
+      Get.snackbar("error".tr, "invalidWeight".tr, snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    if (heightCm > 250 || heightCm < 50) {
+      Get.snackbar("error".tr, "invalidHeight".tr, snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
 
     calcStatus = StatusRequest.loading;
     update();

@@ -39,16 +39,18 @@ class DietModel {
 
     String? _extractDoctorName(Map<String, dynamic> json) {
       if (json["doctor"] is Map) {
-        return (json["doctor"] as Map)["name"]?.toString();
+        final d = json["doctor"] as Map;
+        return (d["name"] ?? d["fullname"] ?? d["full_name"])?.toString();
       }
-      return json["doctor_name"]?.toString();
+      return (json["doctor_name"] ?? json["fullname"] ?? json["full_name"])?.toString();
     }
 
     String? _extractPatientName(Map<String, dynamic> json) {
       if (json["patient"] is Map) {
-        return (json["patient"] as Map)["name"]?.toString();
+        final p = json["patient"] as Map;
+        return (p["name"] ?? p["fullname"] ?? p["full_name"])?.toString();
       }
-      return json["patient_name"]?.toString();
+      return (json["patient_name"] ?? json["fullname"] ?? json["full_name"])?.toString();
     }
 
     List<DietMealModel> mealsList = [];

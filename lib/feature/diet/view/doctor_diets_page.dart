@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../../../core/shared/widgets/drawer.dart';
 import '../../../core/class/status_request.dart';
 import '../../../core/constant/theme/colors.dart';
-import '../../../core/shared/widgets/drawer.dart';
 import '../../../core/shared/widgets/app_bar.dart';
 import '../controller/diet_controller.dart';
 import '../model/diet_model.dart';
@@ -366,13 +365,30 @@ class _DietCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      diet.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColor.deepPurple,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          diet.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColor.deepPurple,
+                          ),
+                        ),
+                        if (diet.patientName != null && diet.patientName!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              "${"patientName".tr}: ${diet.patientName}",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   Icon(

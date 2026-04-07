@@ -195,7 +195,9 @@ const Map<String, String> arTranslation = {
   "error": "خطأ",
   "enterHeightWeight": "يرجى إدخال الطول والوزن",
   "invalidValues": "قيم غير صحيحة",
-
+  "invalidAge": "يرجى إدخال عمر منطقي (أقل من 100)",
+  "invalidWeight": "يرجى إدخال وزن منطقي (أقل من 200 كغ)",
+  "invalidHeight": "يرجى إدخال طول منطقي (بين 50 و 250 سم)",
   "doctorDetails": "تفاصيل الطبيب",
   "personalEmail": "الإيميل الشخصي",
   "bankAccount": "الحساب البنكي",

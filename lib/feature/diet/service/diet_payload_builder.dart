@@ -117,10 +117,10 @@ class DietPayloadBuilder {
         "meal_type": mealType,
         "name": name,
         "serving_summary": _servingSummary(servings, mealItems: items),
-        "carbs_g": carbs,
-        "protein_g": protein,
-        "fat_g": fat,
-        "calories": calories,
+        "carbs_g": carbs.round(),
+        "protein_g": protein.round(),
+        "fat_g": fat.round(),
+        "calories": calories.round(),
       });
     }
     return meals;
