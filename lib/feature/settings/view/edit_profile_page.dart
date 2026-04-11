@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/constant/asset.dart';
 import '../../../core/constant/theme/colors.dart';
 import '../../../core/shared/widgets/app_bar.dart';
+import '../../../core/service/serviecs.dart' as nutri_guide_services;
 import '../controller/edit_profile_controller.dart';
 
 const Color _fieldBg = AppColor.customGrey;
@@ -104,6 +105,9 @@ class EditProfilePage extends GetView<EditProfileController> {
   }
 
   Widget _buildProfileLogo() {
+    final myServices = Get.find<nutri_guide_services.MyServices>();
+    final imgUrl = myServices.profileImageUrl;
+
     return Container(
       width: 120,
       height: 120,
@@ -117,13 +121,17 @@ class EditProfilePage extends GetView<EditProfileController> {
             offset: const Offset(0, 4),
           ),
         ],
+        image: imgUrl != null ? DecorationImage(
+          image: NetworkImage(imgUrl),
+          fit: BoxFit.cover,
+        ) : null,
       ),
-      child: ClipOval(
+      child: imgUrl == null ? ClipOval(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Image.asset(ImageAssets.logo, fit: BoxFit.contain),
         ),
-      ),
+      ) : null,
     );
   }
 

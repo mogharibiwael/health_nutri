@@ -18,6 +18,9 @@ class SignupController extends GetxController {
   late TextEditingController confirmPasswordController;
   late TextEditingController dietPriceController;
   late TextEditingController bankAccountController;
+  late TextEditingController specializationController;
+  late TextEditingController bioController;
+  late TextEditingController experienceController;
 
   final SignupData signupData = SignupData(Get.find());
 
@@ -36,6 +39,32 @@ class SignupController extends GetxController {
   String? cvFilePath;
   String? cvFileName;
   Uint8List? cvFileBytes;
+
+  String? profileImagePath;
+  String? profileImageName;
+  Uint8List? profileImageBytes;
+
+  Future<void> pickProfileImage() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+      if (result != null && result.files.single.name.isNotEmpty) {
+        profileImagePath = result.files.single.path;
+        profileImageName = result.files.single.name;
+        profileImageBytes = result.files.single.bytes;
+        update();
+      }
+    } catch (e) {
+      showAwesomeDialog(
+        type: DialogType.error,
+        title: "Error",
+        desc: "Could not pick image: $e",
+      );
+    }
+  }
 
   /// Pick degree: PDF, DOC, DOCX, or images
   Future<void> pickDegreeFile() async {
@@ -187,8 +216,13 @@ class SignupController extends GetxController {
         degreeFileBytes: selectedType == "doctor" ? degreeFileBytes : null,
         cvFilePath: selectedType == "doctor" ? cvFilePath : null,
         cvFileBytes: selectedType == "doctor" ? cvFileBytes : null,
+        imageFilePath: profileImagePath,
+        imageFileBytes: profileImageBytes,
         consultationFee: consultationFee,
         bankAccount: selectedType == "doctor" ? bankAccountController.text.trim() : null,
+        specialization: selectedType == "doctor" ? specializationController.text.trim() : null,
+        bio: selectedType == "doctor" ? bioController.text.trim() : null,
+        yearsOfExperience: selectedType == "doctor" ? int.tryParse(experienceController.text.trim()) : null,
       );
 
       print(res);
@@ -257,6 +291,9 @@ class SignupController extends GetxController {
     confirmPasswordController = TextEditingController();
     dietPriceController = TextEditingController();
     bankAccountController = TextEditingController();
+    specializationController = TextEditingController();
+    bioController = TextEditingController();
+    experienceController = TextEditingController();
     _applyRoleFromRoute();
     super.onInit();
   }
@@ -278,6 +315,9 @@ class SignupController extends GetxController {
     confirmPasswordController.dispose();
     dietPriceController.dispose();
     bankAccountController.dispose();
+    specializationController.dispose();
+    bioController.dispose();
+    experienceController.dispose();
     super.onClose();
   }
 }

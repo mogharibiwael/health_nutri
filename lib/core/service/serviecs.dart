@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:nutri_guide/core/constant/api_link.dart';
 
 class MyServices extends GetxService {
   late SharedPreferences sharedPreferences;
@@ -69,6 +70,26 @@ class MyServices extends GetxService {
     final id = u["id"];
     if (id is int) return id;
     return int.tryParse(id?.toString() ?? "");
+  }
+
+  /// Global profile image URL logic
+  String? get profileImageUrl {
+    final u = user;
+    if (u == null) return null;
+    
+    // Check patient's profile image
+    final pat = u["patient_profile"] ?? u["patientProfile"] ?? u["patient"];
+    if (pat is Map && pat["image"] != null && pat["image"].toString().isNotEmpty) {
+      return "${ApiLinks.storageBase}/${pat["image"]}";
+    }
+
+    // Check doctor's profile image
+    final doc = u["doctor_profile"] ?? u["doctorProfile"] ?? u["doctor"];
+    if (doc is Map && doc["profile_image"] != null && doc["profile_image"].toString().isNotEmpty) {
+      return "${ApiLinks.storageBase}/${doc["profile_image"]}";
+    }
+    
+    return null;
   }
 
   /// Doctor's record id (from doctors table). Required for diet-plans API.

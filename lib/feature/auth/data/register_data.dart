@@ -22,9 +22,13 @@ class SignupData {
     Uint8List? degreeFileBytes,
     String? cvFilePath,
     Uint8List? cvFileBytes,
+    String? imageFilePath,
+    Uint8List? imageFileBytes,
     double? consultationFee,
     String? bankAccount,
     String? specialization,
+    String? bio,
+    int? yearsOfExperience,
   }) async {
     final fields = <String, String>{
       "name": name,
@@ -39,10 +43,19 @@ class SignupData {
       if (consultationFee != null) fields["consultation_fee"] = consultationFee.toString();
       if (bankAccount != null && bankAccount.isNotEmpty) fields["bank_account"] = bankAccount;
       if (specialization != null && specialization.isNotEmpty) fields["specialization"] = specialization;
+      if (bio != null && bio.isNotEmpty) fields["bio"] = bio;
+      if (yearsOfExperience != null) fields["years_of_experience"] = yearsOfExperience.toString();
       fields["type"] = "doctor";
     }
 
     final files = <MultipartFileField>[];
+    
+    if (imageFileBytes != null && imageFileBytes.isNotEmpty) {
+      files.add(MultipartFileField(fieldName: "profile_image", bytes: imageFileBytes, fileName: "profile.jpg"));
+    } else if (imageFilePath != null && imageFilePath.isNotEmpty) {
+      files.add(MultipartFileField(fieldName: "profile_image", filePath: imageFilePath));
+    }
+
     if (type == "doctor") {
       // Degree file: prefer bytes (web), fallback to path (mobile)
       if (degreeFileBytes != null && degreeFileBytes.isNotEmpty) {

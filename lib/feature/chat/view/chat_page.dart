@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/shared/widgets/drawer.dart';
 import '../../../core/class/status_request.dart';
 import '../../../core/constant/theme/colors.dart';
+import '../../../core/service/serviecs.dart';
 import '../../../core/shared/widgets/app_bar.dart';
 import '../controller/chat_controller.dart';
 import '../model/chat_message_model.dart';
@@ -144,6 +145,9 @@ class _Bubble extends StatelessWidget {
     final isMyMessage = message.isMe;
     // sender_type "doctor" → right, "user" → left
     final onRight = isFromDoctor;
+    
+    final myServices = Get.find<MyServices>();
+    final imgUrl = isMyMessage ? myServices.profileImageUrl : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -151,7 +155,7 @@ class _Bubble extends StatelessWidget {
         mainAxisAlignment: onRight ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!onRight) _avatar(isDoctor: false),
+          if (!onRight) _avatar(isDoctor: false, imageUrl: imgUrl),
           if (!onRight) const SizedBox(width: 8),
           Flexible(
             child: Column(
@@ -232,23 +236,26 @@ class _Bubble extends StatelessWidget {
             ),
           ),
           if (onRight) const SizedBox(width: 8),
-          if (onRight) _avatar(isDoctor: true),
+          if (onRight) _avatar(isDoctor: true, imageUrl: imgUrl),
         ],
       ),
     );
   }
 
-  Widget _avatar({required bool isDoctor}) {
+  Widget _avatar({required bool isDoctor, String? imageUrl}) {
     return CircleAvatar(
       radius: 16,
       backgroundColor: isDoctor
           ? Colors.grey.shade200
           : AppColor.primary.withOpacity(0.2),
-      child: Icon(
+      backgroundImage: imageUrl != null 
+          ? NetworkImage(imageUrl) 
+          : null,
+      child: imageUrl == null ? Icon(
         isDoctor ? Icons.medical_services_outlined : Icons.person_outline,
         size: 18,
         color: isDoctor ? Colors.grey.shade700 : AppColor.primary,
-      ),
+      ) : null,
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/shared/widgets/drawer.dart';
 import '../../../core/class/status_request.dart';
 import '../../../core/constant/theme/colors.dart';
+import '../../../core/constant/api_link.dart';
 import '../../../core/shared/widgets/app_bar.dart';
 import '../controller/medical_tests_controller.dart';
 import '../model/medical_test_model.dart';
@@ -171,7 +172,12 @@ class _PatientTile extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: AppColor.primary.withOpacity(0.2),
-          child: Icon(Icons.person, color: AppColor.primary),
+          backgroundImage: patient.image != null
+              ? NetworkImage("${ApiLinks.storageBase}/${patient.image}")
+              : null,
+          child: patient.image == null
+              ? Icon(Icons.person, color: AppColor.primary)
+              : null,
         ),
         title: Text(
           name,

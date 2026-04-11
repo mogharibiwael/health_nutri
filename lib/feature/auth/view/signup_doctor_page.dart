@@ -31,6 +31,8 @@ class SignupDoctorPage extends GetView<SignupController> {
                   const SizedBox(height: 28),
                   _buildSegmentedControl(),
                   const SizedBox(height: 28),
+                  _buildProfileImagePicker(c),
+                  const SizedBox(height: 28),
                   _buildSignupField(
                     controller: c.nameController,
                     hint: "enterNameShort".tr,
@@ -95,14 +97,38 @@ class SignupDoctorPage extends GetView<SignupController> {
                     obscureText: false,
                   ),
                   const SizedBox(height: 16),
-                  _buildSignupField(
-                    controller: c.bankAccountController,
-                    hint: "enterBankAccount".tr,
-                    icon: Icons.account_balance_outlined,
-                    keyboardType: TextInputType.text,
-                    obscureText: false,
-                  ),
-                  const SizedBox(height: 20),
+                    _buildSignupField(
+                      controller: c.bankAccountController,
+                      hint: "enterBankAccount".tr,
+                      icon: Icons.account_balance_outlined,
+                      keyboardType: TextInputType.text,
+                      obscureText: false,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSignupField(
+                      controller: c.specializationController,
+                      hint: "specialization".tr,
+                      icon: Icons.medical_services_outlined,
+                      keyboardType: TextInputType.text,
+                      obscureText: false,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSignupField(
+                      controller: c.experienceController,
+                      hint: "yearsOfExperience".tr,
+                      icon: Icons.history_edu_outlined,
+                      keyboardType: TextInputType.number,
+                      obscureText: false,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSignupField(
+                      controller: c.bioController,
+                      hint: "bio".tr,
+                      icon: Icons.description_outlined,
+                      keyboardType: TextInputType.multiline,
+                      obscureText: false,
+                    ),
+                    const SizedBox(height: 20),
                   _buildGenderSelection(c),
                   const SizedBox(height: 20),
                   _buildFileUploadSection(c),
@@ -156,6 +182,38 @@ class SignupDoctorPage extends GetView<SignupController> {
           child: Text("signup".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _darkPurple)),
         ),
       ],
+    );
+  }
+
+  Widget _buildProfileImagePicker(SignupController c) {
+    return Center(
+      child: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: _lightLavender,
+            backgroundImage: c.profileImageBytes != null 
+                ? MemoryImage(c.profileImageBytes!) 
+                : null,
+            child: c.profileImageBytes == null
+                ? Icon(Icons.person, size: 50, color: Colors.grey.shade400)
+                : null,
+          ),
+          GestureDetector(
+            onTap: c.pickProfileImage,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColor.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

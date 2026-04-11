@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/class/status_request.dart';
 import '../../../core/constant/theme/colors.dart';
+import '../../../core/constant/api_link.dart';
 import '../../../core/shared/widgets/app_bar.dart';
 import '../controller/forum_posts_controller.dart';
 import '../model/forum_post_model.dart';
@@ -167,14 +168,19 @@ class _PostCard extends StatelessWidget {
                   backgroundColor: isMe
                       ? AppColor.primary.withOpacity(0.15)
                       : Colors.grey.shade100,
-                  child: Text(
-                    _initial(post.userName ?? "U"),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: isMe ? AppColor.primary : Colors.grey.shade600,
-                    ),
-                  ),
+                  backgroundImage: post.userImage != null
+                      ? NetworkImage("${ApiLinks.storageBase}/${post.userImage}")
+                      : null,
+                  child: post.userImage == null 
+                      ? Text(
+                          _initial(post.userName ?? "U"),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isMe ? AppColor.primary : Colors.grey.shade600,
+                          ),
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 10),
                 Expanded(

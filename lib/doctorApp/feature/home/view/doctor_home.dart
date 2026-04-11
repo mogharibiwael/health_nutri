@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nutri_guide/core/routes/app_route.dart';
 import 'package:nutri_guide/core/service/serviecs.dart';
+import 'package:nutri_guide/core/constant/api_link.dart';
 
 import '../../../../core/class/status_request.dart';
 import '../../../../core/constant/theme/colors.dart';
@@ -256,7 +257,12 @@ class _PatientCard extends StatelessWidget {
             CircleAvatar(
               radius: 22,
               backgroundColor: AppColor.primary.withOpacity(0.12),
-              child: Icon(Icons.person_outline, color: AppColor.primary),
+              backgroundImage: patient.image != null
+                  ? NetworkImage("${ApiLinks.storageBase}/${patient.image}")
+                  : null,
+              child: patient.image == null
+                  ? Icon(Icons.person_outline, color: AppColor.primary)
+                  : null,
             ),
             const SizedBox(width: 12),
             Expanded(

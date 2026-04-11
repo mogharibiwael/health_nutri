@@ -5,6 +5,7 @@ class ForumPostModel {
   final String? title;  // optional - API doc: POST only sends content
   final String content;
   final String? userName;
+  final String? userImage;
   final int likesCount;
   final bool isLiked;
   final String? createdAt;
@@ -16,6 +17,7 @@ class ForumPostModel {
     this.title,
     required this.content,
     this.userName,
+    this.userImage,
     this.likesCount = 0,
     this.isLiked = false,
     this.createdAt,
@@ -29,6 +31,17 @@ class ForumPostModel {
     }
     uName ??= json["user_name"]?.toString();
 
+    // Extract user image
+    String? uImage;
+    if (json["user"] is Map) {
+      final u = json["user"] as Map;
+      final pat = u["patient"] ?? u["patient_profile"] ?? u["patientProfile"];
+      if (pat is Map && pat["image"] != null) uImage = pat["image"].toString();
+      final doc = u["doctor"] ?? u["doctor_profile"] ?? u["doctorProfile"];
+      if (doc is Map && doc["profile_image"] != null) uImage = doc["profile_image"].toString();
+    }
+    uImage ??= json["user_image"]?.toString();
+
     return ForumPostModel(
       id: (json["id"] is int) ? json["id"] : int.tryParse("${json["id"]}") ?? 0,
       forumId: (json["forum_id"] is int) ? json["forum_id"] : int.tryParse("${json["forum_id"]}") ?? 0,
@@ -36,6 +49,7 @@ class ForumPostModel {
       title: json["title"]?.toString(),
       content: (json["content"] ?? json["body"] ?? "").toString(),
       userName: uName,
+      userImage: uImage,
       likesCount: (json["likes_count"] is int)
           ? json["likes_count"]
           : int.tryParse("${json["likes_count"]}") ?? 0,
@@ -55,6 +69,7 @@ class ForumPostModel {
       title: title,
       content: content,
       userName: userName,
+      userImage: userImage,
       likesCount: likesCount ?? this.likesCount,
       isLiked: isLiked ?? this.isLiked,
       createdAt: createdAt,

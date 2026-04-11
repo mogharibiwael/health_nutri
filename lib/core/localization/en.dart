@@ -214,6 +214,8 @@ const Map<String, String> enTranslation = {
   "specialization": "Specialization",
   "license": "License number",
   "consultationFee": "Consultation fee",
+  "yearsOfExperience": "Years of Experience",
+  "bio": "Professional Bio",
 
   "bio": "Bio",
   "success": "Success",

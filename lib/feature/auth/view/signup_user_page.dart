@@ -30,6 +30,8 @@ class SignupUserPage extends GetView<SignupController> {
             const SizedBox(height: 28),
             _buildSegmentedControl(),
             const SizedBox(height: 28),
+            _buildProfileImagePicker(c),
+            const SizedBox(height: 28),
             _buildSignupField(
               controller: c.nameController,
               hint: "enterNameShort".tr,
@@ -123,6 +125,38 @@ class SignupUserPage extends GetView<SignupController> {
           child: Text("signup".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _darkPurple)),
         ),
       ],
+    );
+  }
+
+  Widget _buildProfileImagePicker(SignupController c) {
+    return Center(
+      child: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundColor: _lightLavender,
+            backgroundImage: c.profileImageBytes != null 
+                ? MemoryImage(c.profileImageBytes!) 
+                : null,
+            child: c.profileImageBytes == null
+                ? Icon(Icons.person, size: 50, color: Colors.grey.shade400)
+                : null,
+          ),
+          GestureDetector(
+            onTap: c.pickProfileImage,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColor.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
