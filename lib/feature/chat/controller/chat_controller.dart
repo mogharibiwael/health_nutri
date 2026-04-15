@@ -201,6 +201,14 @@ class ChatController extends GetxController {
 
     final text = messageController.text.trim();
     final hasFile = attachedFilePath != null && attachedFilePath!.isNotEmpty;
+    // keep in case you later want image-specific UX (preview, compression, etc.)
+    // ignore: unused_local_variable
+    final isImage = hasFile &&
+        ((attachedFileName ?? attachedFilePath ?? "").toLowerCase().endsWith(".png") ||
+            (attachedFileName ?? attachedFilePath ?? "").toLowerCase().endsWith(".jpg") ||
+            (attachedFileName ?? attachedFilePath ?? "").toLowerCase().endsWith(".jpeg") ||
+            (attachedFileName ?? attachedFilePath ?? "").toLowerCase().endsWith(".webp") ||
+            (attachedFileName ?? attachedFilePath ?? "").toLowerCase().endsWith(".gif"));
 
     if (text.isEmpty && !hasFile) return;
 
@@ -209,17 +217,18 @@ class ChatController extends GetxController {
       return;
     }
 
-    final messageText = text.isEmpty ? "(Attachment)" : text;
+    final messageText = text.isEmpty ? (hasFile ? "" : "(Attachment)") : text;
 
     // optimistic
     final optimistic = ChatMessageModel(
       id: -DateTime.now().millisecondsSinceEpoch,
       userId: myUserId,
       doctorId: doctorId,
-      message: hasFile ? "$messageText 📎 ${attachedFileName ?? 'file'}" : messageText,
+      message: messageText.isEmpty ? "(Attachment)" : messageText,
       createdAt: DateTime.now(),
       isMe: true,
       pending: true,
+      localAttachmentPath: hasFile ? attachedFilePath : null,
     );
 
     messages.add(optimistic);
@@ -252,17 +261,24 @@ class ChatController extends GetxController {
           Get.snackbar("Error", _mapStatus(l));
         },
         (r) async {
-          // If a patient is sending a file, keep a copy in medical-files (الملفات المساعدة)
+          // If a patient is sending a file, keep a copy in medical-tests (الفحص الطبي)
           if (!isCurrentUserDoctor && fileToSend != null) {
             try {
-              await chatData.uploadMedicalFile(
+              final inferredName = (messageText.trim().isNotEmpty
+                      ? messageText.trim()
+                      : (fileNameToSend?.trim().isNotEmpty == true ? fileNameToSend!.trim() : "Medical Test"))
+                  .replaceAll(RegExp(r'\\s+'), ' ');
+
+              await chatData.uploadMedicalTest(
+                name: inferredName,
                 filePath: fileToSend,
                 fileName: fileNameToSend,
-                patientId: myUserId,
+                doctorId: doctorId,
+                userId: myUserId,
                 token: myServices.token,
               );
             } catch (e) {
-              debugPrint("Failed to copy file to medical files: $e");
+              debugPrint("Failed to copy file to medical tests: $e");
             }
           }
           sendStatus = StatusRequest.success;
@@ -302,6 +318,9 @@ class ChatController extends GetxController {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!scrollController.hasClients) return;
+      // During rebuilds/refresh, the controller can briefly be attached twice.
+      // Avoid the assertion by waiting for a single attached position.
+      if (scrollController.positions.length != 1) return;
       scrollController.animateTo(
         scrollController.position.maxScrollExtent + 120,
         duration: const Duration(milliseconds: 250),

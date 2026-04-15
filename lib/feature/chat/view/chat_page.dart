@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:io';
 import '../../../core/shared/widgets/drawer.dart';
 import '../../../core/class/status_request.dart';
 import '../../../core/constant/theme/colors.dart';
@@ -7,7 +8,6 @@ import '../../../core/service/serviecs.dart';
 import '../../../core/shared/widgets/app_bar.dart';
 import '../controller/chat_controller.dart';
 import '../model/chat_message_model.dart';
-import '../widget/medical_test_dialog.dart';
 
 class ChatPage extends GetView<ChatController> {
   const ChatPage({super.key});
@@ -105,21 +105,22 @@ class _HistoryBody extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: c.refreshHistory,
-      child: c.messages.isEmpty
-          ? ListView(
-        children: const [
-          SizedBox(height: 120),
-          Center(child: Text("No messages yet")),
-        ],
-      )
-          : ListView.builder(
+      child: ListView.builder(
         controller: c.scrollController,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        itemCount: c.messages.length,
-        itemBuilder: (_, i) => _Bubble(
-          message: c.messages[i],
-          isCurrentUserDoctor: c.isCurrentUserDoctor,
-        ),
+        itemCount: c.messages.isEmpty ? 1 : c.messages.length,
+        itemBuilder: (_, i) {
+          if (c.messages.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.only(top: 120),
+              child: Center(child: Text("No messages yet")),
+            );
+          }
+          return _Bubble(
+            message: c.messages[i],
+            isCurrentUserDoctor: c.isCurrentUserDoctor,
+          );
+        },
       ),
     );
   }
@@ -173,7 +174,7 @@ class _Bubble extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: onRight
                         ? AppColor.primary.withOpacity(0.15)
@@ -201,10 +202,17 @@ class _Bubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        message.message,
-                        style: const TextStyle(fontSize: 15, height: 1.35),
-                      ),
+                      if (message.hasAttachment && message.isImageAttachment) ...[
+                        _ImageAttachment(message: message, onRight: onRight),
+                        if (message.message.trim().isNotEmpty && message.message.trim() != "(Attachment)")
+                          const SizedBox(height: 8),
+                      ],
+                      if (message.message.trim().isNotEmpty &&
+                          !(message.hasAttachment && message.isImageAttachment && message.message.trim() == "(Attachment)"))
+                        Text(
+                          message.message,
+                          style: const TextStyle(fontSize: 15, height: 1.35),
+                        ),
                       const SizedBox(height: 6),
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -269,6 +277,116 @@ class _Bubble extends StatelessWidget {
     final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
     return "$h:$m";
+  }
+}
+
+class _ImageAttachment extends StatelessWidget {
+  final ChatMessageModel message;
+  final bool onRight;
+  const _ImageAttachment({required this.message, required this.onRight});
+
+  @override
+  Widget build(BuildContext context) {
+    final local = message.localAttachmentPath;
+    final remoteUrl = message.attachmentUrl;
+    final hasLocal = local != null && local.isNotEmpty;
+
+    final radius = BorderRadius.circular(14);
+
+    Widget image;
+    if (hasLocal) {
+      image = Image.file(
+        File(local),
+        width: 220,
+        height: 220,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _broken(),
+      );
+    } else if (remoteUrl != null && remoteUrl.isNotEmpty) {
+      image = Image.network(
+        remoteUrl,
+        width: 220,
+        height: 220,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return SizedBox(
+            width: 220,
+            height: 220,
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColor.primary,
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (_, __, ___) => _broken(),
+      );
+    } else {
+      image = _broken();
+    }
+
+    return InkWell(
+      onTap: () {
+        final url = hasLocal ? null : remoteUrl;
+        Get.dialog(
+          Dialog(
+            insetPadding: const EdgeInsets.all(12),
+            backgroundColor: Colors.black,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: InteractiveViewer(
+                    minScale: 0.8,
+                    maxScale: 4.0,
+                    child: Center(
+                      child: hasLocal
+                          ? Image.file(File(local!), fit: BoxFit.contain)
+                          : (url != null
+                              ? Image.network(Uri.encodeFull(url), fit: BoxFit.contain)
+                              : const SizedBox.shrink()),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                )
+              ],
+            ),
+          ),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(
+              color: onRight ? AppColor.primary.withOpacity(0.25) : Colors.grey.shade300,
+            ),
+          ),
+          child: image,
+        ),
+      ),
+    );
+  }
+
+  Widget _broken() {
+    return Container(
+      width: 220,
+      height: 220,
+      color: Colors.grey.shade200,
+      child: Icon(Icons.broken_image_outlined, color: Colors.grey.shade600, size: 34),
+    );
   }
 }
 

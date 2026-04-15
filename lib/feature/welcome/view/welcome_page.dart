@@ -32,7 +32,7 @@ class WelcomePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _buildTextPanel(isAr),
             ),
-            const SizedBox(height: 52),
+            const SizedBox(height:80),
             // ─── Buttons ───
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),

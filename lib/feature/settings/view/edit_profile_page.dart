@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/constant/asset.dart';
 import '../../../core/constant/theme/colors.dart';
 import '../../../core/shared/widgets/app_bar.dart';
 import '../../../core/service/serviecs.dart' as nutri_guide_services;
@@ -15,6 +14,8 @@ class EditProfilePage extends GetView<EditProfileController> {
   @override
   Widget build(BuildContext context) {
     final isAr = Get.locale?.languageCode == 'ar';
+    final myServices = Get.find<nutri_guide_services.MyServices>();
+    final isDoctor = myServices.isDoctor || myServices.isAdmin;
 
     return SafeArea(
       child: Scaffold(
@@ -30,7 +31,7 @@ class EditProfilePage extends GetView<EditProfileController> {
             child: Column(
               children: [
                 const SizedBox(height: 16),
-                _buildProfileLogo(),
+                _buildProfileAvatar(c, isDoctor: isDoctor),
                 const SizedBox(height: 32),
                 _buildField(
                   controller: c.nameController,
@@ -104,34 +105,69 @@ class EditProfilePage extends GetView<EditProfileController> {
     );
   }
 
-  Widget _buildProfileLogo() {
+  Widget _buildProfileAvatar(EditProfileController c, {required bool isDoctor}) {
     final myServices = Get.find<nutri_guide_services.MyServices>();
     final imgUrl = myServices.profileImageUrl;
+    final picked = c.profileImageBytes;
 
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: AppColor.shadowColor.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+    return Center(
+      child: Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          CircleAvatar(
+            radius: 60,
+            backgroundColor: Colors.white,
+            child: CircleAvatar(
+              radius: 56,
+              backgroundColor: isDoctor
+                  ? Colors.grey.shade100
+                  : AppColor.primary.withOpacity(0.12),
+              backgroundImage: picked != null
+                  ? MemoryImage(picked)
+                  : (imgUrl != null ? NetworkImage(imgUrl) : null) as ImageProvider<Object>?,
+              child: (picked == null && imgUrl == null)
+                  ? Icon(
+                      isDoctor ? Icons.medical_services_outlined : Icons.person_outline,
+                      size: 50,
+                      color: isDoctor ? Colors.grey.shade700 : AppColor.primary,
+                    )
+                  : null,
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (picked != null) ...[
+                GestureDetector(
+                  onTap: c.removePickedImage,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.55),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+              GestureDetector(
+                onTap: c.pickProfileImageFromGallery,
+                child: Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: AppColor.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(Icons.photo_library_outlined, color: Colors.white, size: 18),
+                ),
+              ),
+            ],
           ),
         ],
-        image: imgUrl != null ? DecorationImage(
-          image: NetworkImage(imgUrl),
-          fit: BoxFit.cover,
-        ) : null,
       ),
-      child: imgUrl == null ? ClipOval(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Image.asset(ImageAssets.logo, fit: BoxFit.contain),
-        ),
-      ) : null,
     );
   }
 

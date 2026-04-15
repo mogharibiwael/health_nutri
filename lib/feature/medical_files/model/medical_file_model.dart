@@ -1,5 +1,36 @@
 import '../../../core/constant/api_link.dart';
 
+/// Local (asset) PDF file shown in "Medical Files" screen.
+class AssetMedicalFileModel {
+  final String assetPath; // e.g. assets/files/guide.pdf
+
+  const AssetMedicalFileModel({required this.assetPath});
+
+  String get fileName {
+    final p = assetPath.replaceAll('\\', '/');
+    return p.split('/').isNotEmpty ? p.split('/').last : assetPath;
+  }
+
+  String get baseName {
+    final name = fileName;
+    final dot = name.lastIndexOf('.');
+    return dot > 0 ? name.substring(0, dot) : name;
+  }
+
+  String get displayName {
+    switch (baseName.toLowerCase()) {
+      case 'alter':
+        return 'نظام البدائل';
+      case 'jurd':
+        return 'الكتاب الاردني للتغذية';
+      case 'krause':
+        return 'krause';
+      default:
+        return baseName;
+    }
+  }
+}
+
 class MedicalFileModel {
   final int id;
   final int? patientId;
@@ -57,16 +88,36 @@ class MedicalFileModel {
   /// Tries direct/storage URLs first (common Laravel), then API download endpoint.
   List<String> get downloadUrls {
     final urls = <String>[];
-    if (downloadUrl != null && downloadUrl!.trim().isNotEmpty) {
-      urls.add(downloadUrl!.trim());
+    final seen = <String>{};
+    void addUrl(String? value) {
+      if (value == null) return;
+      final v = value.trim();
+      if (v.isEmpty || seen.contains(v)) return;
+      seen.add(v);
+      urls.add(v);
     }
+
+    final rawPath = filePath.trim();
+    final normalizedPath = rawPath.startsWith('/') ? rawPath.substring(1) : rawPath;
+    final withoutUploadsPrefix = normalizedPath.replaceFirst(RegExp(r'^uploads/'), '');
+    final base = ApiLinks.storageBase;
+
+    if (downloadUrl != null && downloadUrl!.trim().isNotEmpty) {
+      addUrl(downloadUrl);
+    }
+
     // Try direct and storage URLs first (files in public/ or storage link)
-    urls.add(directUrl);
-    urls.add(storageUrl);
-    // Then API download endpoint (requires backend to implement GET /api/medical-files/:id/download)
-    urls.add(ApiLinks.medicalFileDownload(id));
-    urls.add(apiUploadsUrl);
-    urls.add(apiStorageUrl);
+    addUrl(directUrl);
+    addUrl(storageUrl);
+    addUrl('$base/storage/$normalizedPath');
+    addUrl('$base/storage/uploads/$withoutUploadsPrefix');
+    addUrl('$base/uploads/$withoutUploadsPrefix');
+
+    // API endpoint and API path variants
+    addUrl(ApiLinks.medicalFileDownload(id));
+    addUrl(apiUploadsUrl);
+    addUrl(apiStorageUrl);
+
     return urls;
   }
 

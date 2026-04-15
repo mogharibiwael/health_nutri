@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:nutri_guide/core/constant/asset.dart';
 import 'package:nutri_guide/core/constant/theme/colors.dart';
 import 'package:nutri_guide/core/permissions/permissions.dart';
 import 'package:nutri_guide/core/routes/app_route.dart';
@@ -17,6 +16,24 @@ class HomeDrawer extends StatefulWidget {
 
 class _HomeDrawerState extends State<HomeDrawer> {
   static const Color _drawerBg = AppColor.primary;
+
+  Widget _profileAvatar({required bool isDoctor}) {
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: Colors.white,
+      child: CircleAvatar(
+        radius: 46,
+        backgroundColor: isDoctor
+            ? Colors.grey.shade100
+            : AppColor.primary.withOpacity(0.12),
+        child: Icon(
+          isDoctor ? Icons.medical_services_outlined : Icons.person_outline,
+          size: 44,
+          color: isDoctor ? Colors.grey.shade700 : AppColor.primary,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +80,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Colors.transparent,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
@@ -73,12 +90,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                               ),
                             ],
                           ),
-                          child: ClipOval(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Image.asset(ImageAssets.logo, fit: BoxFit.contain),
-                            ),
-                          ),
+                          child: _profileAvatar(isDoctor: isDoctor),
                         ),
                       ),
                     ),

@@ -132,11 +132,7 @@ class _DoctorCalculationCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      Get.toNamed(AppRoute.createDietForPatient, arguments: {
-                        "patient": patient,
-                        "patient_id": patient.effectivePatientId,
-                        "patient_name": patient.fullname,
-                      });
+                      Get.toNamed(AppRoute.patientDetails, arguments: patient);
                     },
                     icon: const Icon(Icons.restaurant_menu_outlined),
                     label: Text("createDiet".tr),

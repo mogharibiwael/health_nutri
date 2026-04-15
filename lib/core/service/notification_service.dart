@@ -20,12 +20,10 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
 
-  /// Use v5 to force channel recreation with sound (Android channel settings are immutable)
-  static const String _channelId = 'reminders_channel_v5';
+  /// Bump version to force a fresh channel whenever sound/vibration settings change.
+  /// Android notification channels are immutable once created — new ID = new fresh channel.
+  static const String _channelId = 'reminders_channel_v6';
   static const String _channelName = 'Reminders';
-
-  /// Custom sound for notifications (Android: res/raw/notification_sound.wav)
-  static const RawResourceAndroidNotificationSound _sound = RawResourceAndroidNotificationSound('notification_sound');
 
   Future<void> initialize() async {
     if (_initialized) return;
@@ -35,12 +33,14 @@ class NotificationService {
     try {
       final String tzName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(tzName));
+      debugPrint("NotificationService: timezone set to '$tzName'");
     } catch (e) {
-      debugPrint("NotificationService: Timezone detection failed ($e), falling back to Asia/Riyadh or UTC");
+      debugPrint("NotificationService: ⚠️ Timezone detection failed ($e), falling back to Asia/Riyadh");
       try {
         tz.setLocalLocation(tz.getLocation('Asia/Riyadh'));
       } catch (_) {
         tz.setLocalLocation(tz.getLocation('UTC'));
+        debugPrint("NotificationService: ⚠️ Asia/Riyadh not found, using UTC");
       }
     }
 
@@ -60,11 +60,11 @@ class NotificationService {
       _channelId,
       _channelName,
       description: 'Reminder notifications',
-      importance: Importance.high,
-      playSound: true,
+      importance: Importance.max,     // MAX so the sound plays even in DND (alarms)
+      playSound: true,                // use device default notification sound
       enableVibration: true,
-      sound: _sound,
-      audioAttributesUsage: AudioAttributesUsage.alarm,
+      enableLights: true,
+      audioAttributesUsage: AudioAttributesUsage.notification,
     );
     await _plugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -121,35 +121,44 @@ class NotificationService {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
 
+    debugPrint("NotificationService: scheduling id=$id title='$title' "
+        "for $hour:${minute.toString().padLeft(2,'0')} → "
+        "scheduledDate=$scheduledDate  now=$now  tz=${tz.local.name}");
+
     const androidDetails = AndroidNotificationDetails(
       _channelId,
       _channelName,
       channelDescription: 'Reminder notifications',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
       playSound: true,
-      sound: _sound,
       enableVibration: true,
-      audioAttributesUsage: AudioAttributesUsage.alarm,
+      enableLights: true,
+      audioAttributesUsage: AudioAttributesUsage.notification,
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      sound: 'notification_sound.wav',
     );
     const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
-    await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduledDate,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+    try {
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduledDate,
+        details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+      debugPrint("NotificationService: ✅ reminder $id scheduled successfully");
+    } catch (e, st) {
+      debugPrint("NotificationService: ❌ zonedSchedule FAILED for id=$id → $e\n$st");
+      rethrow;
+    }
   }
 
   /// Cancel a scheduled reminder.
@@ -169,21 +178,20 @@ class NotificationService {
       _channelId,
       _channelName,
       channelDescription: 'Reminder notifications',
-      importance: Importance.high,
-      priority: Priority.high,
+      importance: Importance.max,
+      priority: Priority.max,
       playSound: true,
-      sound: _sound,
       enableVibration: true,
-      audioAttributesUsage: AudioAttributesUsage.alarm,
+      enableLights: true,
+      audioAttributesUsage: AudioAttributesUsage.notification,
     );
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      sound: 'notification_sound.wav',
     );
     const details = NotificationDetails(android: androidDetails, iOS: iosDetails);
-    
+
     if (kIsWeb) {
       Get.snackbar(
         title,

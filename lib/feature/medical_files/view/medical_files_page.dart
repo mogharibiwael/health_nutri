@@ -38,27 +38,11 @@ class MedicalFilesPage extends GetView<MedicalFilesController> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (c.statusRequest.value == StatusRequest.offlineFailure) {
-      return _EmptyState(
-        icon: Icons.wifi_off_rounded,
-        title: "noInternet".tr,
-        onRetry: c.refresh,
-      );
-    }
-
-    if (c.statusRequest.value == StatusRequest.rateLimit) {
-      return _EmptyState(
-        icon: Icons.schedule_rounded,
-        title: "tooManyRequests".tr,
-        onRetry: c.refresh,
-      );
-    }
-
-    if (c.statusRequest.value == StatusRequest.serverFailure ||
-        c.statusRequest.value == StatusRequest.failure) {
+    if (c.statusRequest.value == StatusRequest.failure ||
+        c.statusRequest.value == StatusRequest.serverFailure) {
       return _EmptyState(
         icon: Icons.error_outline_rounded,
-        title: "serverError".tr,
+        title: "serverError".tr, // reused translation key for generic error
         onRetry: c.refresh,
       );
     }
@@ -78,7 +62,7 @@ class MedicalFilesPage extends GetView<MedicalFilesController> {
         itemCount: c.files.length,
         itemBuilder: (context, index) {
           return _FileCard(
-            fileName: c.files[index].fileName,
+            fileName: c.files[index].displayName,
             onDownload: () => c.downloadAndShow(c.files[index]),
           );
         },

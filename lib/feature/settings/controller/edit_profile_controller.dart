@@ -1,6 +1,8 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/class/crud.dart';
 import '../../../core/constant/api_link.dart';
 import '../../../core/function/show_dialog.dart';
@@ -9,6 +11,7 @@ import '../../../core/service/serviecs.dart';
 class EditProfileController extends GetxController {
   final MyServices myServices = Get.find();
   final Crud crud = Get.find();
+  final ImagePicker _picker = ImagePicker();
 
   late TextEditingController nameController;
   late TextEditingController emailController;
@@ -19,6 +22,9 @@ class EditProfileController extends GetxController {
   bool isConfirmPasswordHidden = true;
   bool isLoading = false;
 
+  Uint8List? profileImageBytes;
+  String? profileImagePath;
+
   @override
   void onInit() {
     super.onInit();
@@ -27,6 +33,32 @@ class EditProfileController extends GetxController {
     emailController = TextEditingController(text: u?["email"]?.toString() ?? "");
     passwordController = TextEditingController();
     confirmPasswordController = TextEditingController();
+  }
+
+  Future<void> pickProfileImageFromGallery() async {
+    try {
+      final file = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      if (file == null) return;
+
+      profileImagePath = file.path;
+      profileImageBytes = await file.readAsBytes();
+      update();
+    } catch (e) {
+      showAwesomeDialog(
+        type: DialogType.error,
+        title: "Error",
+        desc: "Could not pick image: $e",
+      );
+    }
+  }
+
+  void removePickedImage() {
+    profileImageBytes = null;
+    profileImagePath = null;
+    update();
   }
 
   void togglePassword() {
@@ -92,20 +124,39 @@ class EditProfileController extends GetxController {
     isLoading = true;
     update();
 
-    final body = <String, dynamic>{
-      "name": name,
-      "email": email,
-    };
-    if (pass.isNotEmpty) {
-      body["password"] = pass;
-    }
-
     final token = myServices.token;
-    final res = await crud.putData(
-      ApiLinks.updateUser(userId is int ? userId : int.parse(userId.toString())),
-      body,
-      token: token,
-    );
+    final url = ApiLinks.updateUser(userId is int ? userId : int.parse(userId.toString()));
+
+    final hasNewImage = profileImageBytes != null && profileImageBytes!.isNotEmpty;
+
+    final res = hasNewImage
+        ? await crud.postMultipart(
+            url,
+            token: token,
+            fields: <String, String>{
+              "_method": "PUT",
+              "name": name,
+              "email": email,
+              if (pass.isNotEmpty) "password": pass,
+              if (pass.isNotEmpty) "password_confirmation": confirm,
+            },
+            files: [
+              MultipartFileField(
+                fieldName: "profile_image",
+                bytes: profileImageBytes,
+                fileName: "profile.jpg",
+              ),
+            ],
+          )
+        : await crud.putData(
+            url,
+            <String, dynamic>{
+              "name": name,
+              "email": email,
+              if (pass.isNotEmpty) "password": pass,
+            },
+            token: token,
+          );
 
     isLoading = false;
     update();
@@ -118,11 +169,14 @@ class EditProfileController extends GetxController {
       );
     }, (r) async {
       // Update local session with new data
-      final updatedUser = <String, dynamic>{
-        ...?myServices.user,
-        "name": name,
-        "email": email,
-      };
+      final returnedUser = r["user"];
+      final updatedUser = returnedUser is Map
+          ? <String, dynamic>{...Map<String, dynamic>.from(returnedUser)}
+          : <String, dynamic>{
+              ...?myServices.user,
+              "name": name,
+              "email": email,
+            };
       await myServices.saveSession(
         token: token ?? "",
         type: myServices.type ?? "user",
