@@ -32,6 +32,7 @@ class AppRoute {
   static const medicalTests = "/medical-tests";
   static const calculationsHistory = "/calculations-history";
   static const doctorPatientCalculations = "/doctor-patient-calculations";
+  static const adDetails = "/ad-details";
 
 //   doctor
   static const doctorWelcome = "/doctor-welcome";

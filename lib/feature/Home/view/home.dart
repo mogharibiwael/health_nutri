@@ -72,7 +72,7 @@ class HomePage extends GetView<HomeController> {
                           const SizedBox(height: 12),
                         ],
                         // ─── Pending Subscription Message ───
-                        if (controller.isSubscriptionPending) ...[
+                        if (controller.isSubscriptionPending && !controller.isSubscribedApproved) ...[
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(16),
@@ -414,92 +414,92 @@ class _AdCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Image layer - best display
-            if (hasImage)
-              Image.network(
-                url!,
-                fit: BoxFit.cover,
-                alignment: Alignment.center,
-                gaplessPlayback: true,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      _buildPlaceholder(),
-                      Center(
-                        child: SizedBox(
-                          width: 32,
-                          height: 32,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColor.primary.withOpacity(0.8),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => Get.toNamed(AppRoute.adDetails, arguments: ad),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // Image layer - best display
+                if (hasImage)
+                  Image.network(
+                    url!,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    gaplessPlayback: true,
+                    headers: const {
+                      'Accept': 'image/*',
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          _buildPlaceholder(),
+                          Center(
+                            child: SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColor.primary.withOpacity(0.8),
+                                ),
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
                             ),
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
                           ),
-                        ),
+                        ],
+                      );
+                    },
+                    errorBuilder: (_, error, stack) {
+                      debugPrint("[Ads] Image load failed: url=$url error=$error");
+                      return _buildPlaceholder();
+                    },
+                  )
+                else
+                  _buildPlaceholder(),
+                // Overlay - optimized gradient for image visibility + title readability
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.grey.withOpacity(0.12),
+                          Colors.grey.withOpacity(0.55),
+                          AppColor.secondary.withOpacity(0.2),
+                        ],
+                        stops: const [0.0, 0.4, 0.78, 1.0],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
-                    ],
-                  );
-                },
-                errorBuilder: (_, __, ___) => _buildPlaceholder(),
-              )
-            else
-              _buildPlaceholder(),
-            // Overlay - optimized gradient for image visibility + title readability
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(20, 56, 20, 24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      Colors.grey.withOpacity(0.12),
-                      Colors.grey.withOpacity(0.55),
-                      AppColor.secondary.withOpacity(0.2),
-                    ],
-                    stops: const [0.0, 0.4, 0.78, 1.0],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+                    ),
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.4,
+                        height: 1.35,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
-                    height: 1.35,
-                    // shadows: [
-                    //   Shadow(
-                    //     color: AppColor.textColor.withOpacity(0.5),
-                    //     offset: const Offset(0, 1),
-                    //     blurRadius: 4,
-                    //   ),
-                    //   Shadow(
-                    //     color: AppColor.textColor.withOpacity(0.3),
-                    //     offset: const Offset(0, 2),
-                    //     blurRadius: 8,
-                    //   ),
-                    // ],
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -114,6 +114,12 @@ class NotificationService {
   }) async {
     if (!_initialized) await initialize();
 
+    // Helpful debug: exact alarm availability affects timing (and sometimes delivery)
+    try {
+      final canExact = await canScheduleExactNotifications();
+      debugPrint("NotificationService: canScheduleExactNotifications=$canExact");
+    } catch (_) {}
+
     final now = tz.TZDateTime.now(tz.local);
     var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
 
@@ -129,6 +135,7 @@ class NotificationService {
       _channelId,
       _channelName,
       channelDescription: 'Reminder notifications',
+      channelAction: AndroidNotificationChannelAction.createIfNotExists,
       importance: Importance.max,
       priority: Priority.max,
       playSound: true,

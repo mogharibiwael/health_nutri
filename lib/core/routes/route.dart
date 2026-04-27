@@ -50,6 +50,7 @@ import '../../feature/diet/view/patient_diets_list_page.dart';
 import '../../feature/step_counter/view/step_counter_page.dart';
 import '../../feature/medical_files/view/medical_files_page.dart';
 import '../../feature/medical_tests/view/medical_tests_page.dart';
+import '../../feature/ads/view/ad_details_page.dart';
 import 'app_route.dart';
 import 'binding.dart';
 
@@ -200,6 +201,11 @@ abstract class AppPages {
       name: AppRoute.medicalTests,
       page: () => const MedicalTestsPage(),
       binding: MedicalTestsBinding(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: AppRoute.adDetails,
+      page: () => const AdDetailsPage(),
       middlewares: [AuthMiddleware()],
     ),
 

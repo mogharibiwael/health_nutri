@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dartz/dartz.dart';
 import '../../../core/class/status_request.dart';
@@ -42,14 +43,35 @@ class TipsController extends GetxController {
       statusRequest = l;
       update();
     }, (r) {
-      statusRequest = handelData(r);
+      final code = r["_statusCode"] is int ? (r["_statusCode"] as int) : int.tryParse("${r["_statusCode"]}") ?? 200;
+      if (code != 200 && code != 201) {
+        debugPrint("[Tips] fetchFirstPage failed: status=$code body=${r["message"] ?? r}");
+        statusRequest = StatusRequest.serverFailure;
+        update();
+        return;
+      }
 
-      final List data = (r["data"] ?? []) as List;
-      tips.addAll(data.map((e) => TipModel.fromJson(e as Map<String, dynamic>)));
+      try {
+        // Laravel paginator may come as:
+        // { data: [..], next_page_url: ... }
+        // or wrapped: { data: { data: [..], next_page_url: ... } }
+        final dataRoot = r["data"];
+        final List list = (dataRoot is Map)
+            ? ((dataRoot["data"] is List) ? (dataRoot["data"] as List) : const <dynamic>[])
+            : (dataRoot is List ? dataRoot : const <dynamic>[]);
 
-      hasNextPage = r["next_page_url"] != null;
-      statusRequest = StatusRequest.success;
-      update();
+        tips.addAll(list.whereType<Map>().map((e) => TipModel.fromJson(Map<String, dynamic>.from(e))));
+
+        final nextUrl = (dataRoot is Map) ? dataRoot["next_page_url"] : r["next_page_url"];
+        hasNextPage = nextUrl != null && nextUrl.toString().trim().isNotEmpty;
+
+        statusRequest = StatusRequest.success;
+        update();
+      } catch (e, st) {
+        debugPrint("[Tips] parse error: $e\n$st");
+        statusRequest = StatusRequest.serverFailure;
+        update();
+      }
     });
   }
 
@@ -72,14 +94,31 @@ class TipsController extends GetxController {
       isLoadingMore = false;
       update();
     }, (r) {
-      final List data = (r["data"] ?? []) as List;
-      tips.addAll(data.map((e) => TipModel.fromJson(e as Map<String, dynamic>)));
+      final code = r["_statusCode"] is int ? (r["_statusCode"] as int) : int.tryParse("${r["_statusCode"]}") ?? 200;
+      if (code != 200 && code != 201) {
+        debugPrint("[Tips] loadMore failed: status=$code body=${r["message"] ?? r}");
+        isLoadingMore = false;
+        update();
+        return;
+      }
 
-      currentPage = nextPage;
-      hasNextPage = r["next_page_url"] != null;
+      try {
+        final dataRoot = r["data"];
+        final List list = (dataRoot is Map)
+            ? ((dataRoot["data"] is List) ? (dataRoot["data"] as List) : const <dynamic>[])
+            : (dataRoot is List ? dataRoot : const <dynamic>[]);
 
-      isLoadingMore = false;
-      update();
+        tips.addAll(list.whereType<Map>().map((e) => TipModel.fromJson(Map<String, dynamic>.from(e))));
+
+        currentPage = nextPage;
+        final nextUrl = (dataRoot is Map) ? dataRoot["next_page_url"] : r["next_page_url"];
+        hasNextPage = nextUrl != null && nextUrl.toString().trim().isNotEmpty;
+      } catch (e, st) {
+        debugPrint("[Tips] loadMore parse error: $e\n$st");
+      } finally {
+        isLoadingMore = false;
+        update();
+      }
     });
   }
 }

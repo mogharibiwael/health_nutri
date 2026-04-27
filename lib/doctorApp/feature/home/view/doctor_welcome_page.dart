@@ -117,6 +117,24 @@ class DoctorWelcomePage extends GetView<DoctorHomeController> {
                   ],
                 ),
               ),
+              const SizedBox(height: 18),
+              // Doctors list (available to doctors too)
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: OutlinedButton.icon(
+                  onPressed: () => Get.toNamed("/doctors"),
+                  icon: const Icon(Icons.medical_services_outlined),
+                  label: Text("doctorsList".tr),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColor.primary,
+                    side: BorderSide(color: AppColor.primary.withOpacity(0.7)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
               Spacer(),
               // Logout button
               SizedBox(

@@ -15,6 +15,7 @@ class MedicalFilesController extends GetxController {
   final RxList<AssetMedicalFileModel> files = <AssetMedicalFileModel>[].obs;
   bool _isLoading = false;
 
+
   @override
   void onInit() {
     super.onInit();

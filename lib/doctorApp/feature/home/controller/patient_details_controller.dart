@@ -318,8 +318,23 @@ class PatientDetailsController extends GetxController {
     }
   }
 
+  bool _canReduceOtherForIncrement(int exclude) {
+    if (exclude != 1 && fatPercent > fatMin) return true;
+    if (exclude != 2 && proteinPercent > proteinMin) return true;
+    if (exclude != 3 && carbsPercent > carbsMin) return true;
+    return false;
+  }
+
+  bool _canIncreaseOtherForDecrement(int exclude) {
+    if (exclude != 1 && fatPercent < fatMax) return true;
+    if (exclude != 2 && proteinPercent < proteinMax) return true;
+    if (exclude != 3 && carbsPercent < carbsMax) return true;
+    return false;
+  }
+
   void incrementCarbs() {
     if (carbsPercent >= carbsMax) return;
+    if (!_canReduceOtherForIncrement(1)) return;
     carbsPercent++;
     _reduceOtherForIncrement(1);
     update();
@@ -327,6 +342,7 @@ class PatientDetailsController extends GetxController {
 
   void decrementCarbs() {
     if (carbsPercent <= carbsMin) return;
+    if (!_canIncreaseOtherForDecrement(1)) return;
     carbsPercent--;
     _increaseOtherForDecrement(1);
     update();
@@ -334,6 +350,7 @@ class PatientDetailsController extends GetxController {
 
   void incrementProtein() {
     if (proteinPercent >= proteinMax) return;
+    if (!_canReduceOtherForIncrement(2)) return;
     proteinPercent++;
     _reduceOtherForIncrement(2);
     update();
@@ -341,6 +358,7 @@ class PatientDetailsController extends GetxController {
 
   void decrementProtein() {
     if (proteinPercent <= proteinMin) return;
+    if (!_canIncreaseOtherForDecrement(2)) return;
     proteinPercent--;
     _increaseOtherForDecrement(2);
     update();
@@ -348,6 +366,7 @@ class PatientDetailsController extends GetxController {
 
   void incrementFats() {
     if (fatPercent >= fatMax) return;
+    if (!_canReduceOtherForIncrement(3)) return;
     fatPercent++;
     _reduceOtherForIncrement(3);
     update();
@@ -355,6 +374,7 @@ class PatientDetailsController extends GetxController {
 
   void decrementFats() {
     if (fatPercent <= fatMin) return;
+    if (!_canIncreaseOtherForDecrement(3)) return;
     fatPercent--;
     _increaseOtherForDecrement(3);
     update();

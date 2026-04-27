@@ -12,10 +12,13 @@ class TipsData {
     String? token,
     int? categoryId,
   }) async {
-    var url = "${ApiLinks.baseUrl}/public/tips?page=$page";
-    if (categoryId != null && categoryId > 0) {
-      url += "&category_id=$categoryId";
-    }
-    return await crud.getData(url, token: token);
+    return await crud.getData(
+      ApiLinks.publicTips,
+      token: token,
+      query: {
+        "page": page,
+        if (categoryId != null && categoryId > 0) "category_id": categoryId,
+      },
+    );
   }
 }

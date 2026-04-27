@@ -54,14 +54,7 @@ class TipsMainPage extends GetView<TipsMainController> {
                   _IntroCard(isAr: isAr),
                   const SizedBox(height: 24),
                   if (c.categories.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        "noTipsFound".tr,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey.shade700),
-                      ),
-                    )
+                    _AllTipsCard(isAr: isAr)
                   else
                     ...List.generate(
                       c.categories.length,
@@ -88,6 +81,68 @@ class TipsMainPage extends GetView<TipsMainController> {
       "categoryId": category.id,
       "categoryName": category.displayName,
     });
+  }
+}
+
+class _AllTipsCard extends StatelessWidget {
+  final bool isAr;
+  const _AllTipsCard({required this.isAr});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: AppColor.shadowColor.withOpacity(0.25),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            "tipsNoCategoriesTitle".tr,
+            textAlign: isAr ? TextAlign.right : TextAlign.left,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColor.deepPurple,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "tipsNoCategoriesBody".tr,
+            textAlign: isAr ? TextAlign.right : TextAlign.left,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.35,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton.icon(
+            onPressed: () => Get.toNamed("/tips-list", arguments: {
+              "categoryId": null,
+              "categoryName": "tips".tr,
+            }),
+            icon: const Icon(Icons.format_list_bulleted_rounded),
+            label: Text("viewAllTips".tr),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColor.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:nutri_guide/core/constant/api_link.dart';
+import 'package:nutri_guide/core/class/crud.dart';
 
 class MyServices extends GetxService {
   late SharedPreferences sharedPreferences;
@@ -113,11 +114,17 @@ class MyServices extends GetxService {
   }
 
   // -------------------------------
-  // ✅ Subscriptions cache (doctor ids)
+  // ✅ Subscriptions cache
   static const String _subsKey = "subscribed_doctor_ids";
+  static const String _subsAcceptedKey = "accepted_subscribed_doctor_ids";
 
   Set<int> get subscribedDoctorIds {
     final list = sharedPreferences.getStringList(_subsKey) ?? <String>[];
+    return list.map((e) => int.tryParse(e)).whereType<int>().toSet();
+  }
+
+  Set<int> get acceptedSubscribedDoctorIds {
+    final list = sharedPreferences.getStringList(_subsAcceptedKey) ?? <String>[];
     return list.map((e) => int.tryParse(e)).whereType<int>().toSet();
   }
 
@@ -145,8 +152,7 @@ class MyServices extends GetxService {
   }
 
   bool isApprovedToDoctor(int doctorId) {
-    final cur = currentDoctorIdFromPatientProfile;
-    return cur != null && cur == doctorId && isSubscribedFromPatientProfile;
+    return acceptedSubscribedDoctorIds.contains(doctorId);
   }
 
   Future<void> markSubscribedDoctor(int doctorId) async {
@@ -159,12 +165,14 @@ class MyServices extends GetxService {
   }
 
   /// True when a patient has a subscription that is approved by admin.
-  /// Backend returns is_subscribed: true in patient_profile when approved.
-  bool get isSubscriptionApproved => isPatient && isSubscribedFromPatientProfile;
+  /// Determined via GET /api/users-subscribed where status == accepted.
+  bool get isSubscriptionApproved => isPatient && acceptedSubscribedDoctorIds.isNotEmpty;
 
   /// True when a patient has requested a subscription (uploaded invoice) but not yet approved.
   bool get hasPendingSubscription =>
-      isPatient && subscribedDoctorIds.isNotEmpty && !isSubscribedFromPatientProfile;
+      isPatient &&
+      subscribedDoctorIds.isNotEmpty &&
+      subscribedDoctorIds.difference(acceptedSubscribedDoctorIds).isNotEmpty;
 
   Future<void> setSubscribedDoctorIds(Set<int> ids) async {
     await sharedPreferences.setStringList(
@@ -173,11 +181,66 @@ class MyServices extends GetxService {
     );
   }
 
+  Future<void> setAcceptedSubscribedDoctorIds(Set<int> ids) async {
+    await sharedPreferences.setStringList(
+      _subsAcceptedKey,
+      ids.map((e) => e.toString()).toList(),
+    );
+  }
+
+  /// Refresh subscription status from backend.
+  /// Uses GET /api/users-subscribed and treats (active/accepted/approved) as approved.
+  Future<void> syncSubscribedDoctorsFromBackend() async {
+    if (!isLoggedIn) return;
+    if (!isPatient) return;
+
+    try {
+      final crud = Get.find<Crud>();
+      final res = await crud.getData(ApiLinks.usersSubscribed, token: token);
+      await res.fold((_) async {}, (r) async {
+        final code = r["_statusCode"] is int ? (r["_statusCode"] as int) : int.tryParse("${r["_statusCode"]}") ?? 200;
+        if (code != 200 && code != 201) return;
+
+        final raw = r["data"] ?? r["subscriptions"] ?? r["doctors"] ?? r;
+        final list = raw is List ? raw : <dynamic>[];
+
+        final ids = <int>{};
+        final acceptedIds = <int>{};
+
+        for (final e in list) {
+          if (e is Map) {
+            final did = e["id"] ?? e["doctor_id"] ?? e["doctorId"] ?? e["user_id"];
+            final id = did is int ? did : int.tryParse(did?.toString() ?? "");
+            if (id != null && id > 0) ids.add(id);
+
+            final status = (e["status"] ?? e["subscription_status"] ?? e["subscriptionStatus"] ?? "")
+                .toString()
+                .trim()
+                .toLowerCase();
+            if (status == "accepted" || status == "active" || status == "approved" || status == "approve") {
+              if (id != null && id > 0) acceptedIds.add(id);
+            }
+            continue;
+          }
+          if (e is int) ids.add(e);
+          if (e is String) {
+            final id = int.tryParse(e);
+            if (id != null && id > 0) ids.add(id);
+          }
+        }
+
+        await setSubscribedDoctorIds(ids);
+        await setAcceptedSubscribedDoctorIds(acceptedIds);
+      });
+    } catch (_) {}
+  }
+
   Future<void> clearSession() async {
     await sharedPreferences.remove("token");
     await sharedPreferences.remove("type");
     await sharedPreferences.remove("user");
     await sharedPreferences.remove(_subsKey );
+    await sharedPreferences.remove(_subsAcceptedKey);
   }
 
   // ─────────────────────────────────────────────────────

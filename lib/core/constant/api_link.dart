@@ -17,6 +17,7 @@
    static const String verifyEmail = "$baseUrl/verify-email";
    static const String resendVerificationCode = "$baseUrl/resend-verification-code";
    static const String subscriptions = "$baseUrl/subscriptions";
+  static const String usersSubscribed = "$baseUrl/users-subscribed";
    static const String chatMessages = "$baseUrl/chat/messages";
    static const String chatHistory = "$baseUrl/chat/history"; // + /{doctorId} — patient's view
    static String chatConversationMessages(int patientId) => "$baseUrl/chat/conversations/$patientId/messages"; // doctor's view: messages with this patient
@@ -66,6 +67,7 @@
    static const String publicAds = "$baseUrl/public/ads";
    static const String publicDoctors = "$baseUrl/public/doctors";     // GET list of doctors (no auth)
    static const String publicAthkar = "$baseUrl/public/athkar";
+  static const String publicTips = "$baseUrl/public/tips";
 
    // developer_api_guide: calculations, references, meals
    static const String calculationsHistory = "$baseUrl/calculations/history"; // GET - history for current patient

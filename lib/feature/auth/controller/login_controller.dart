@@ -137,7 +137,7 @@ class LoginController extends GetxController {
           // Load subscriptions from backend for patients (so Chat shows for subscribed doctors after re-login)
           if (userType == "user" || userType == "patient" || userType == "payed") {
             // IMPORTANT: await subscriptions sync so UI gating (My Diet / Chat) is correct on first render.
-            await _syncMyDoctors(token.toString());
+            await _syncSubscribedDoctors(token.toString());
             // Profile sync is for navigation helpers (current doctor id/name), but should not override my-doctors list.
             await _syncPatientProfileAndCurrentDoctor(token.toString());
           }
@@ -174,41 +174,49 @@ class LoginController extends GetxController {
       res.fold(
         (_) {},
         (r) {
-          final raw = r["data"] ?? r["subscriptions"] ?? r;
+          final code = r["_statusCode"] is int ? (r["_statusCode"] as int) : int.tryParse("${r["_statusCode"]}") ?? 200;
+          if (code != 200 && code != 201) return;
+
+          final raw = r["data"] ?? r["subscriptions"] ?? r["doctors"] ?? r;
           final list = raw is List ? raw : <dynamic>[];
-          final doctorIds = <int>{};
+          final ids = <int>{};
+          final acceptedIds = <int>{};
           for (final e in list) {
-            if (e is! Map) continue;
-            final did = e["doctor_id"] ?? e["doctorId"];
-            if (did != null) {
-              final id = did is int ? did : int.tryParse(did.toString());
-              if (id != null && id > 0) doctorIds.add(id);
+            if (e is Map) {
+              // Try common shapes:
+              // - { id: <doctorId>, ... }   (doctors list)
+              // - { doctor_id: <id> }      (subscription record)
+              final did = e["id"] ?? e["doctor_id"] ?? e["doctorId"] ?? e["user_id"];
+              final id = did is int ? did : int.tryParse(did?.toString() ?? "");
+              if (id != null && id > 0) ids.add(id);
+
+              final status = (e["status"] ?? e["subscription_status"] ?? e["subscriptionStatus"] ?? "")
+                  .toString()
+                  .trim()
+                  .toLowerCase();
+              if (status == "accepted" || status == "active" || status == "approve" || status == "approved") {
+                if (id != null && id > 0) acceptedIds.add(id);
+              }
+              continue;
+            }
+            if (e is int) ids.add(e);
+            if (e is String) {
+              final id = int.tryParse(e);
+              if (id != null && id > 0) ids.add(id);
             }
           }
+
           // Always write (even empty) so we don't keep stale subscriptions.
-          myServices.setSubscribedDoctorIds(doctorIds);
+          myServices.setSubscribedDoctorIds(ids);
+          myServices.setAcceptedSubscribedDoctorIds(acceptedIds);
         },
       );
     } catch (_) {}
   }
 
-  Future<void> _syncMyDoctors(String token) async {
-    try {
-      final res = await patientDoctorsData.getMyDoctors(token: token);
-      res.fold((_) {}, (r) async {
-        final raw = r["data"] ?? r["doctors"] ?? r;
-        final list = raw is List ? raw : <dynamic>[];
-        final ids = <int>{};
-        for (final e in list) {
-          if (e is! Map) continue;
-          final did = e["id"] ?? e["doctor_id"] ?? e["doctorId"];
-          final id = did is int ? did : int.tryParse(did?.toString() ?? "");
-          if (id != null && id > 0) ids.add(id);
-        }
-        // Always write (even empty) so My Diet and Chat can hide correctly.
-        await myServices.setSubscribedDoctorIds(ids);
-      });
-    } catch (_) {}
+  Future<void> _syncSubscribedDoctors(String token) async {
+    // Primary source: /api/users-subscribed/ (user request)
+    await _loadSubscriptionsFromBackend(token);
   }
 
   Future<void> _syncPatientProfileAndCurrentDoctor(String token) async {

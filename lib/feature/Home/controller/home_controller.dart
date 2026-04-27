@@ -26,7 +26,14 @@ class HomeController extends GetxController {
     super.onInit();
     permissions = Permissions(myServices);
     loadUser();
+    _refreshSubscriptionStatus();
     fetchAds();
+  }
+
+  Future<void> _refreshSubscriptionStatus() async {
+    if (!myServices.isPatient) return;
+    await myServices.syncSubscribedDoctorsFromBackend();
+    update();
   }
 
   Future<void> fetchAds() async {
@@ -38,6 +45,13 @@ class HomeController extends GetxController {
       adsStatus = l;
       update();
     }, (r) {
+      final code = r["_statusCode"] is int ? (r["_statusCode"] as int) : int.tryParse("${r["_statusCode"]}") ?? 200;
+      if (code != 200 && code != 201) {
+        print("[Ads] fetchAds failed: status=$code body=${r["message"] ?? r}");
+        adsStatus = StatusRequest.serverFailure;
+        update();
+        return;
+      }
       adsStatus = StatusRequest.success;
       List rawList = [];
       if (r["data"] is List) {
@@ -55,16 +69,14 @@ class HomeController extends GetxController {
         if (e is Map<String, dynamic>) {
           try {
             final ad = AdModel.fromJson(e, storageBase: storageBase);
-            if (ad.isActive && ad.imageUrl != null && ad.imageUrl!.isNotEmpty) {
-              ads.add(ad);
-            }
+            print("[Ads] parsed id=${ad.id} active=${ad.isActive} imageUrl=${ad.imageUrl}");
+            if (ad.imageUrl != null && ad.imageUrl!.isNotEmpty) ads.add(ad);
           } catch (_) {}
         } else if (e is Map) {
           try {
             final ad = AdModel.fromJson(Map<String, dynamic>.from(e), storageBase: storageBase);
-            if (ad.isActive && ad.imageUrl != null && ad.imageUrl!.isNotEmpty) {
-              ads.add(ad);
-            }
+            print("[Ads] parsed id=${ad.id} active=${ad.isActive} imageUrl=${ad.imageUrl}");
+            if (ad.imageUrl != null && ad.imageUrl!.isNotEmpty) ads.add(ad);
           } catch (_) {}
         }
       }
@@ -111,7 +123,7 @@ class HomeController extends GetxController {
   bool get isSubscribedApproved => myServices.isSubscriptionApproved;
 
   /// True when subscription is submitted but waiting for admin approval.
-  bool get isSubscriptionPending => myServices.hasPendingSubscription;
+  bool get isSubscriptionPending => myServices.hasPendingSubscription && !myServices.isSubscriptionApproved;
 
   bool get isDoctor => permissions.isDoctor || permissions.isAdmin;
   /// True when doctor is approved by admin (can see "My clinic" and enter doctor home).

@@ -42,10 +42,11 @@ class SubscriptionInfoController extends GetxController {
         rating: "0",
       );
     }
-    _checkStatus();
+    _refreshAndCheckStatus();
   }
 
-  void _checkStatus() {
+  Future<void> _refreshAndCheckStatus() async {
+    await myServices.syncSubscribedDoctorsFromBackend();
     isSubscribed = myServices.isSubscribedToDoctor(doctor.id);
     isApproved = myServices.isApprovedToDoctor(doctor.id);
     update();
